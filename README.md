@@ -1,90 +1,132 @@
-# Projeto de Aplicação Interativa com React e Tailwind CSS
+# 📚 Tutor Virtual de HTML & CSS
 
-Este projeto é uma aplicação web interativa desenvolvida com React e Vite, estilizada com Tailwind CSS. Ele apresenta várias seções dinâmicas, incluindo um sistema de personalização de avatar, uma trilha de aprendizado visual e uma interface de chat interativa com suporte a markdown e temas.
+![Avatar do Tutor](https://github.com/SEU_USUARIO/SEU_REPOSITORIO/blob/main/src/assets/img/meu_avatar.png?raw=true)
+*Substitua o caminho da imagem acima para o caminho correto no seu repositório GitHub após o upload.*
 
-## Visão Geral
+Um tutor interativo baseado em IA para auxiliar no aprendizado de HTML e CSS. Este projeto foi desenvolvido com React (Vite) para o frontend e Flask para o backend, utilizando a API Gemini para fornecer respostas inteligentes e personalizadas.
 
-A aplicação é projetada para demonstrar uma série de funcionalidades modernas de desenvolvimento web, focando em:
-- **Componentização** com React.
-- **Estilização rápida e responsiva** com Tailwind CSS.
-- **Interatividade** através de formulários e controles dinâmicos.
-- **Experiência do usuário** com temas claro/escuro e feedback visual.
+## ✨ Funcionalidades
 
-## Funcionalidades
+* **Trilha de Aprendizado Personalizada:** Siga um caminho estruturado de tópicos de HTML e CSS, desde o básico até conceitos avançados.
+* **Modos de Dificuldade:** Altere a profundidade e complexidade das explicações entre "Iniciante", "Intermediário" e "Avançado".
+* **Conversa Interativa:** Tire suas dúvidas e receba explicações detalhadas sobre qualquer conceito de HTML e CSS.
+* **Exercícios Interativos:** Responda a perguntas para testar seu conhecimento e receba feedback instantâneo.
+* **Sistema de Pontuação:** Acompanhe seu progresso nos exercícios.
+* **Feedback de Mensagens:** Avalie as respostas do tutor (like/dislike) para ajudar a melhorar a qualidade do aprendizado.
+* **Temas Claro/Escuro:** Alterne entre os modos de visualização para maior conforto.
+* **Avatar Personalizável:** (Funcionalidade anteriormente considerada, se não estiver presente, remova este item ou ajuste a descrição).
+* **Integração com Discord:** Junte-se à nossa comunidade para mais discussões e suporte.
 
-- **Personalização de Avatar**: Crie e visualize um avatar personalizado selecionando diferentes estilos e cores para cabeça, corpo e pernas.
-- **Trilha de Aprendizado Interativa**: Explore uma lista de tópicos de aprendizado apresentados como "cartões flutuantes" em um layout de grid responsivo, indicando o tópico ativo.
-- **Interface de Chat Dinâmica**:
-    - Envie e receba mensagens, simulando uma conversa entre usuário e um "tutor".
-    - Suporte a blocos de código Markdown com destaque de sintaxe.
-    - Botão para copiar snippets de código diretamente do chat.
-    - Sugestões de perguntas pré-definidas para iniciar conversas.
-    - Mensagens com animação de fade-in.
-- **Temas Claro e Escuro**: Alterne entre um tema claro e escuro para aprimorar a experiência visual.
-- **Design Responsivo**: A interface se adapta a diferentes tamanhos de tela (desktop, tablet, mobile).
+## 🚀 Tecnologias Utilizadas
 
-## Tecnologias Utilizadas
+* **Frontend:**
+    * [React](https://react.dev/) (com [Vite](https://vitejs.dev/) para o bundling)
+    * [Tailwind CSS](https://tailwindcss.com/) (para estilização rápida e responsiva)
+    * [React Icons](https://react-icons.github.io/react-icons/) (para ícones como o do Discord)
+* **Backend:**
+    * [Python](https://www.python.org/)
+    * [Flask](https://flask.palletsprojects.com/) (para a API REST)
+    * [Google Gemini API](https://ai.google.dev/models/gemini) (para inteligência artificial e geração de respostas)
+    * [python-dotenv](https://pypi.org/project/python-dotenv/) (para gerenciamento de variáveis de ambiente)
+    * [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/) (para lidar com requisições cross-origin)
+    * [uuid](https://docs.python.org/3/library/uuid.html) (para geração de IDs de sessão)
 
-- **React**: Biblioteca JavaScript para construção de interfaces de usuário.
-- **Vite**: Ferramenta de build de próxima geração para projetos front-end, oferecendo um ambiente de desenvolvimento rápido.
-- **Tailwind CSS**: Framework CSS utility-first para estilização rápida e personalizada.
-- **PostCSS** e **Autoprefixer**: Para processamento e otimização do CSS.
-- **highlight.js**: Para destaque de sintaxe em blocos de código Markdown.
-- **react-markdown**: Componente React para renderizar Markdown.
-- **uuid**: Para geração de IDs únicas.
+## 🛠️ Como Executar o Projeto Localmente
 
-## Instalação
+Siga estas instruções para configurar e executar o projeto em sua máquina local.
 
-Siga os passos abaixo para configurar e rodar o projeto em sua máquina local:
+### Pré-requisitos
+
+* Node.js (versão LTS recomendada)
+* Python (versão 3.8+)
+* npm ou yarn
+* pip
+
+### 1. Configuração do Backend (API Flask)
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [URL_DO_SEU_REPOSITORIO]
-    cd vite-project
+    git clone [https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git](https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git)
+    cd SEU_REPOSITORIO
     ```
-    *(Substitua `[URL_DO_SEU_REPOSITORIO]` pela URL real do seu repositório Git.)*
+    *Substitua `SEU_USUARIO` e `SEU_REPOSITORIO` pelos seus dados.*
 
-2.  **Instale as dependências:**
+2.  **Crie um ambiente virtual (recomendado):**
+    ```bash
+    python -m venv venv
+    ```
+
+3.  **Ative o ambiente virtual:**
+    * **Windows:**
+        ```bash
+        .\venv\Scripts\activate
+        ```
+    * **macOS/Linux:**
+        ```bash
+        source venv/bin/activate
+        ```
+
+4.  **Instale as dependências Python:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *(Se você não tiver um `requirements.txt`, pode criá-lo com `pip freeze > requirements.txt` após instalar as libs manualmente (`flask`, `flask-cors`, `python-dotenv`, `google-generativeai`, `uuid`)*
+
+5.  **Configure a API Key do Google Gemini:**
+    * Crie um arquivo `.env` na raiz do diretório `backend` (ou na raiz do projeto, se o seu `index.py` estiver lá).
+    * Obtenha sua chave da API Gemini em [Google AI Studio](https://aistudio.google.com/app/apikey).
+    * Adicione a chave ao arquivo `.env`:
+        ```
+        GOOGLE_API_KEY=SUA_CHAVE_API_AQUI
+        ```
+
+6.  **Inicie o servidor Flask:**
+    ```bash
+    flask run
+    ```
+    O servidor backend estará rodando em `http://127.0.0.1:5000/`.
+
+### 2. Configuração do Frontend (React com Vite)
+
+1.  **Navegue até o diretório do frontend:**
+    ```bash
+    cd frontend # Ou o nome da sua pasta do frontend, se houver uma. Caso contrário, você já estará na raiz do projeto.
+    ```
+
+2.  **Instale as dependências Node.js:**
     ```bash
     npm install
     # ou
     yarn install
     ```
 
-## Como Rodar o Projeto
+3.  **Inicie o aplicativo React:**
+    ```bash
+    npm run dev
+    # ou
+    yarn dev
+    ```
+    O aplicativo frontend estará acessível em `http://localhost:5173/` (ou outra porta, conforme indicado pelo Vite).
 
-Após a instalação das dependências, você pode iniciar o servidor de desenvolvimento:
+## ☁️ Deploy no Vercel
 
-```bash
-npm run dev
-# ou
-yarn dev
-```
+Este projeto está configurado para um deploy fácil no [Vercel](https://vercel.com/).
 
-Isso iniciará o aplicativo em `http://localhost:5173` (ou em outra porta disponível, que será exibida no terminal).
+1.  **Conecte seu repositório Git** (GitHub, GitLab, Bitbucket) à sua conta Vercel.
+2.  Ao importar o projeto, o Vercel deve detectar automaticamente a configuração do Vite.
+3.  **Configure as variáveis de ambiente** no Vercel Dashboard (em `Project Settings -> Environment Variables`), adicionando `GOOGLE_API_KEY` com sua chave da API.
+4.  Realize o deploy!
 
-## Estrutura do Projeto (Exemplo de diretórios e arquivos importantes)
+## 🤝 Contribuição
 
-```
-vite-project/
-├── public/
-├── src/
-│   ├── App.jsx         # Componente principal da aplicação
-│   ├── main.jsx        # Ponto de entrada do React (renderiza App.jsx)
-│   ├── App.css         # Estilos globais e customizações com Tailwind
-│   └── components/     # Possíveis componentes (ex: AvatarCustomization, LearningPath, ChatInterface)
-├── index.html          # O arquivo HTML principal
-├── package.json        # Dependências e scripts do projeto
-├── tailwind.config.js  # Configuração do Tailwind CSS
-├── postcss.config.js   # Configuração do PostCSS para Tailwind e Autoprefixer
-├── README.md           # Este arquivo
-└── vite.config.js      # Configuração do Vite
-```
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
 
-## Contribuição
+## 📄 Licença
 
-Contribuições são bem-vindas! Se você tiver sugestões, melhorias ou encontrar bugs, sinta-se à vontade para abrir uma issue ou enviar um pull request.
+Este projeto está licenciado sob a Licença MIT.
 
-## Licença
+---
 
-Este projeto está licenciado sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
+**Conecte-se Conosco!**
+
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/zuGxsgy5)
