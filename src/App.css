@@ -1,0 +1,154 @@
+/* src/App.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos Gerais */
+body {
+  /* Usando classes Tailwind para margem, fonte, flexbox, alinhamento, altura mínima, e transições de cor */
+  @apply m-0 font-sans flex justify-center items-center min-h-screen transition-colors duration-300;
+}
+
+/* Temas */
+/* As classes light-theme e dark-theme no body devem ser controladas via JavaScript. */
+/* As cores específicas para cada tema serão aplicadas diretamente nos componentes usando classes Tailwind e variantes dark: */
+/* Ex: bg-white dark:bg-gray-800 */
+body.light-theme {
+  /* Cores padrão para o tema claro - removido as vars CSS, usando classes Tailwind */
+  @apply bg-gray-100 text-gray-800;
+}
+
+body.dark-theme {
+  /* Cores padrão para o tema escuro - removido as vars CSS, usando classes Tailwind */
+  @apply bg-gray-900 text-gray-200;
+}
+
+.app-container {
+  /* max-w-6xl é 1200px (Tailwind padrão) */
+  @apply w-full max-w-6xl flex flex-col items-center p-5 box-border;
+}
+
+h1, h2 {
+  /* text-inherit para herdar a cor do texto do pai */
+  @apply text-inherit mb-5 text-center;
+}
+
+button, select {
+  /* Removido font-inherit, que não é uma classe Tailwind */
+  @apply rounded-lg;
+}
+
+/* ------------------------------------- */
+/* Estilos para AvatarCustomization.jsx - REMOVIDOS */
+/* ------------------------------------- */
+/* Todo o conteúdo de estilo relacionado ao avatar foi removido daqui. */
+
+/* ------------------------------------- */
+/* Estilos para LearningPath.jsx */
+/* ------------------------------------- */
+.learning-path-container {
+  @apply w-full max-w-4xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 relative overflow-hidden;
+}
+
+.learning-path-container h2 {
+  @apply text-3xl font-bold text-center mb-8 text-blue-700 dark:text-blue-300;
+}
+
+.path-line {
+  @apply absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-300 dark:bg-blue-600 z-0;
+  top: 0;
+}
+
+.topic-cards-wrapper {
+  @apply relative z-10;
+}
+
+.topic-card {
+  @apply relative bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-md mb-8 cursor-pointer transition-all duration-300 ease-in-out border-2 border-transparent; /* Alterado dark:bg-gray-700 para dark:bg-gray-900 */
+  width: 90%; /* Ajuste para caber na tela */
+  max-width: 400px; /* Limite a largura para melhor leitura */
+}
+
+.topic-card:hover {
+  @apply shadow-lg transform scale-105 border-blue-400 dark:border-blue-500;
+}
+
+.topic-card.active {
+  @apply border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900 shadow-xl; /* Alterado dark:bg-blue-900/30 para dark:bg-blue-900 */
+}
+
+.topic-card h3 {
+  @apply text-xl font-semibold mb-2 text-blue-800 dark:text-blue-200;
+}
+
+.topic-card p {
+  @apply text-gray-700 dark:text-gray-100 text-sm; /* Alterado para dark:text-gray-100 para melhor contraste */
+}
+
+.topic-card.left-aligned {
+  @apply mr-auto;
+}
+
+.topic-card.right-aligned {
+  @apply ml-auto;
+}
+
+.current-topic-indicator {
+  @apply absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full;
+}
+
+
+/* Estilos existentes (mantidos para outros componentes) */
+.suggested-question-button {
+  @apply flex-shrink-0 min-w-0 md:min-w-[150px] whitespace-nowrap text-nowrap py-2 px-4 rounded-full text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300; /* Corrigido duration-250 para duration-300 */
+}
+
+.suggested-question-button:disabled {
+  @apply bg-gray-400 cursor-not-allowed;
+}
+
+.exercise-button {
+  @apply bg-purple-600 hover:bg-purple-700;
+}
+
+.exercise-correct-button {
+  @apply bg-green-600;
+}
+
+.exercise-correct-button:hover {
+  @apply bg-green-700;
+}
+
+.exercise-incorrect-button {
+  @apply bg-red-600;
+}
+
+.exercise-incorrect-button:hover {
+  @apply bg-red-700;
+}
+
+.message-input-form {
+  @apply p-4 border-t border-gray-200 flex gap-2 bg-gray-50 dark:border-gray-700 dark:bg-gray-900;
+}
+
+.message-input-form input {
+  @apply flex-grow p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200;
+}
+
+.message-input-form button {
+  @apply py-3 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors duration-300;
+}
+
+/* Adições para o ChatHeader */
+.chat-header .controls {
+  @apply flex flex-wrap justify-center items-center gap-4; /* Adiciona flexbox e gap para espaçamento */
+}
+
+.chat-header .controls select {
+  @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+/* Estilo para as opções dentro do select no modo escuro */
+.chat-header .controls select option {
+  @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200;
+}
