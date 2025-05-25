@@ -1,7 +1,6 @@
 # 📚 Tutor Virtual de HTML & CSS
 
-![Avatar do Tutor]https://github.com/feelps04/html-css-tutor-virtual/blob/main/src/assets/img/meu_avatar.png
-*Substitua o caminho da imagem acima para o caminho correto no seu repositório GitHub após o upload.*
+![Avatar do Tutor](https://github.com/feelps04/html-css-tutor-virtual/blob/main/src/assets/img/meu_avatar.png?raw=true)
 
 Um tutor interativo baseado em IA para auxiliar no aprendizado de HTML e CSS. Este projeto foi desenvolvido com React (Vite) para o frontend e Flask para o backend, utilizando a API Gemini para fornecer respostas inteligentes e personalizadas.
 
@@ -46,10 +45,9 @@ Siga estas instruções para configurar e executar o projeto em sua máquina loc
 
 1.  **Clone o repositório:**
     ```bash
-    git clone [https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git](https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git)
-    cd SEU_REPOSITORIO
+    git clone [https://github.com/feelps04/html-css-tutor-virtual.git](https://github.com/feelps04/html-css-tutor-virtual.git)
+    cd html-css-tutor-virtual
     ```
-    *Substitua `SEU_USUARIO` e `SEU_REPOSITORIO` pelos seus dados.*
 
 2.  **Crie um ambiente virtual (recomendado):**
     ```bash
@@ -112,7 +110,7 @@ Siga estas instruções para configurar e executar o projeto em sua máquina loc
 
 Este projeto está configurado para um deploy fácil no [Vercel](https://vercel.com/).
 
-1.  **Conecte seu repositório Git** (GitHub, GitLab, Bitbucket) à sua conta Vercel.
+1.  **Conecte seu repositório Git** (`https://github.com/feelps04/html-css-tutor-virtual.git`) à sua conta Vercel.
 2.  Ao importar o projeto, o Vercel deve detectar automaticamente a configuração do Vite.
 3.  **Configure as variáveis de ambiente** no Vercel Dashboard (em `Project Settings -> Environment Variables`), adicionando `GOOGLE_API_KEY` com sua chave da API.
 4.  Realize o deploy!
