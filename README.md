@@ -1,6 +1,6 @@
 # 📚 Tutor Virtual de HTML & CSS
 
-![Avatar do Tutor](https://github.com/SEU_USUARIO/SEU_REPOSITORIO/blob/main/src/assets/img/meu_avatar.png?raw=true)
+![Avatar do Tutor]https://github.com/feelps04/html-css-tutor-virtual/blob/main/src/assets/img/meu_avatar.png
 *Substitua o caminho da imagem acima para o caminho correto no seu repositório GitHub após o upload.*
 
 Um tutor interativo baseado em IA para auxiliar no aprendizado de HTML e CSS. Este projeto foi desenvolvido com React (Vite) para o frontend e Flask para o backend, utilizando a API Gemini para fornecer respostas inteligentes e personalizadas.
