@@ -3,11 +3,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  root: './', // Adiciona ou ajusta esta linha
+  root: './',
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'index.html', // Adiciona ou ajusta esta linha (ou 'public/index.html' se for o caso)
+      input: 'public/index.html', // Corrigido para apontar para public/index.html
     },
   },
   server: {

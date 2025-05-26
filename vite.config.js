@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'index.html',
+      input: 'index.html', // Ou 'public/index.html' se o seu index.html estiver dentro da pasta public/
     },
   },
   server: {
