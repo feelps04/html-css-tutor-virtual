@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaDiscord } from 'react-icons/fa'; // Importa o ícone do Discord
-import meuAvatar from '../assets/img/meu_avatarr.png'; // Caminho absoluto a partir da raiz pública 
+import meuAvatar from '../assets/'; // Caminho absoluto a partir da raiz pública 
 
 const Home = ({ onStartJourney }) => {
   const [userName, setUserName] = useState('');

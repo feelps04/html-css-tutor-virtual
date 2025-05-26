@@ -1,44 +1,32 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/backend/(.*)"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,HEAD,PUT,PATCH,POST,DELETE"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    }
-  ],
+  "version": 2,
   "builds": [
     {
-      "src": "python/vite-project/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "outputDirectory": "dist"
-      }
-    },
-    {
-      "src": "backend/index.py",
+      "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
         "runtime": "python3.9"
       }
+    },
+    {
+      "src": "vite-project/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
-  ]
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/vite-project/$1"
+    }
+  ],
+  "installCommand": "pip install -r api/requirements.txt && cd vite-project && npm install",
+  "buildCommand": "cd vite-project && npm run vercel-build"
 }

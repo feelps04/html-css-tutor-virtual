@@ -1,12 +1,23 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Mantenha a base como '/' para que os caminhos como /assets/ funcionem
-  base: '/',
+  root: './', // Adiciona ou ajusta esta linha
   build: {
-    outDir: 'dist', // Isso cria a pasta 'dist' dentro de 'vite-project'
-  }
-})
+    outDir: 'dist',
+    rollupOptions: {
+      input: 'index.html', // Adiciona ou ajusta esta linha (ou 'public/index.html' se for o caso)
+    },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+  base: '/'
+});
