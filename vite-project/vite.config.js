@@ -3,11 +3,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  root: './',
+  root: './', // Define a pasta vite-project como o root do projeto Vite
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'public/index.html', // Corrigido para apontar para public/index.html
+      input: 'index.html', // O index.html está diretamente dentro do root do Vite (vite-project/)
     },
   },
   server: {
