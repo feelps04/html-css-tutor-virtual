@@ -140,7 +140,7 @@ function App() {
   const handleStartJourney = async (name, email) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/start-session', {
+      const response = await fetch('/api/start-session', { // LINHA CORRIGIDA
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName: name, userEmail: email }),
@@ -156,16 +156,14 @@ function App() {
       setCurrentMode(data.currentMode);
       setUserName(name);
       setUserEmail(email);
-      setShowLearningPath(true); // Vai para a trilha após o login
-      setMessages([]); // Limpa mensagens para nova sessão
+      setShowLearningPath(true);
+      setMessages([]);
       setCorrectExercisesCount(0);
       setTotalExercisesAttempted(0);
       setLastMessageIsExercise(false);
       setHasEvaluatedLastExercise(false);
     } catch (error) {
       console.error("Erro ao iniciar a sessão:", error);
-      // Usar uma modal ou mensagem na UI em vez de alert
-      // alert("Falha ao iniciar a sessão. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
