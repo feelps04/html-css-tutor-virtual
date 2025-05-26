@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'public/index.html', // ESTA LINHA É CRÍTICA!
+      input: 'index.html', // O index.html está diretamente dentro do root do Vite (vite-project/)
     },
   },
   server: {
