@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import { v4 as uuidv4 } from 'uuid';
 
 // Importa os componentes refatorados
 import Home from './components/home.jsx';
-// AvatarCustomization foi removido, então não é mais importado
 import LearningPath from './components/LearningPath.jsx';
 import ChatHeader from './components/ChatHeader.jsx';
 import ScoreDisplay from './components/ScoreDisplay.jsx';
@@ -12,199 +11,120 @@ import MessagesDisplay from './components/MessagesDisplay.jsx';
 import SuggestedQuestions from './components/SuggestedQuestions.jsx';
 import MessageInput from './components/MessageInput.jsx';
 
-
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [userData, setUserData] = useState(null);
-  // O estado avatarParts não é mais necessário, pois a personalização do avatar foi removida.
-  const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState(null);
-  const [currentMode, setCurrentMode] = useState('iniciante');
-  const [currentTopic, setCurrentTopic] = useState('html_intro');
-  const [learningTopics, setLearningTopics] = useState({});
-  const [nextTopicSuggestion, setNextTopicSuggestion] = useState(null);
-  const [theme, setTheme] = useState('light');
+  // Estados da aplicação
+  const [currentPage, setCurrentPage] = useState('home'); // Controla a página atual (home, learningPath, chat)
+  const [userData, setUserData] = useState(null); // Dados do usuário (nome, email)
+  const [messages, setMessages] = useState([]); // Array de mensagens do chat
+  const [inputMessage, setInputMessage] = useState(''); // Mensagem digitada pelo usuário
+  const [isLoading, setIsLoading] = useState(false); // Indica se uma requisição está em andamento
+  const [sessionId, setSessionId] = useState(null); // ID da sessão para o backend
+  const [currentMode, setCurrentMode] = useState('iniciante'); // Modo de dificuldade atual
+  const [currentTopic, setCurrentTopic] = useState('html_intro'); // Tópico de aprendizado atual
+  const [learningTopics, setLearningTopics] = useState({}); // Tópicos de aprendizado disponíveis
+  const [nextTopicSuggestion, setNextTopicSuggestion] = useState(null); // Sugestão de próximo tópico
+  const [theme, setTheme] = useState('light'); // Tema atual (light/dark)
 
-  const [totalExercisesAttempted, setTotalExercisesAttempted] = useState(0);
-  const [correctExercisesCount, setCorrectExercisesCount] = useState(0);
-  const [lastMessageIsExercise, setLastMessageIsExercise] = useState(false);
-  const [hasEvaluatedLastExercise, setHasEvaluatedLastExercise] = useState(false);
+  // Estados para o sistema de pontuação e exercícios
+  const [totalExercisesAttempted, setTotalExercisesAttempted] = useState(0); // Total de exercícios tentados
+  const [correctExercisesCount, setCorrectExercisesCount] = useState(0); // Contagem de exercícios corretos
+  const [lastMessageIsExercise, setLastMessageIsExercise] = useState(false); // Indica se a última mensagem do tutor foi um exercício
+  const [hasEvaluatedLastExercise, setHasEvaluatedLastExercise] = useState(false); // Indica se o último exercício foi avaliado
 
-
+  // Efeito para aplicar a classe do tema ao body do documento
   useEffect(() => {
-    if (!sessionId) {
-      setSessionId(uuidv4());
-    }
-    fetchLearningTopics();
-  }, [sessionId]);
-
-  useEffect(() => {
-    document.body.className = theme === 'dark' ? 'dark-theme' : 'light-theme';
+    document.body.className = `${theme}-theme`;
   }, [theme]);
 
-  const fetchLearningTopics = async () => {
-    try {
-      // Ajuste a URL para usar o proxy do Vercel /api
-      const response = await fetch('/api/get-learning-topics');
-      if (!response.ok) throw new Error('Falha ao carregar tópicos de aprendizado.');
-      const data = await response.json();
-      setLearningTopics(data);
-    } catch (error) {
-      console.error("Erro ao carregar tópicos de aprendizado:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: uuidv4(),
-          text: "Erro ao carregar tópicos de aprendizado. Por favor, tente novamente mais tarde.",
-          sender: "system-error",
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
-    }
+  // Função para alternar o tema entre claro e escuro
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
-  const sendMessageToBackend = async (messageText, mode, topic) => {
+  // Função para iniciar a jornada do usuário, recebendo dados e buscando tópicos
+  const handleStartJourney = (data) => {
+    setUserData(data);
+    setCurrentPage('learningPath');
+    fetchLearningTopics();
+  };
+
+  // Função para selecionar um tópico de aprendizado e mudar para a página de chat
+  const handleTopicSelect = (topicKey) => {
+    setCurrentTopic(topicKey);
+    setCurrentPage('chat');
+    // Enviar mensagem inicial para o tutor sobre o tópico selecionado
+    sendInitialTopicMessage(topicKey);
+  };
+
+  // Função para retornar à trilha de aprendizado
+  const handleBackToPath = () => {
+    setCurrentPage('learningPath');
+  };
+
+  // Função assíncrona para buscar os tópicos de aprendizado do backend
+  const fetchLearningTopics = async () => {
     setIsLoading(true);
-    setLastMessageIsExercise(false);
-    setHasEvaluatedLastExercise(false);
-
     try {
-      // Ajuste a URL para usar o proxy do Vercel /api
-      const response = await fetch('/api/ask-tutor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: messageText, sessionId, mode, topic }),
-      });
-
+      const response = await fetch('/api/learning_topics'); // Requisição para a API
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
-      const tutorResponse = data.reply;
-      const newNextTopic = data.nextTopicSuggestion;
-      const updatedTopic = data.currentTopic;
-
-      setMessages((prev) => [
-        ...prev,
-        { id: uuidv4(), text: tutorResponse, sender: "tutor", timestamp: new Date().toLocaleTimeString() },
-      ]);
-
-      if (tutorResponse.toLowerCase().includes('exercício') || tutorResponse.toLowerCase().includes('desafio')) {
-        setLastMessageIsExercise(true);
-      }
-
-      if (newNextTopic && newNextTopic !== currentTopic) {
-        setNextTopicSuggestion(newNextTopic);
-        setCurrentTopic(updatedTopic);
-      } else {
-        setNextTopicSuggestion(null);
-        setCurrentTopic(updatedTopic);
-      }
+      setLearningTopics(data.topics); // Atualiza os tópicos de aprendizado no estado
     } catch (error) {
-      console.error("Erro ao enviar mensagem para o backend:", error);
+      console.error('Erro ao buscar tópicos de aprendizado:', error);
+      // Adiciona uma mensagem de erro ao chat se a requisição falhar
       setMessages((prev) => [
         ...prev,
         {
           id: uuidv4(),
-          text: `Desculpe, houve um erro ao processar sua solicitação: ${error.message}. Por favor, tente novamente.`,
-          sender: "system-error",
+          text: 'Desculpe, não consegui carregar os tópicos de aprendizado no momento.',
+          sender: 'tutor',
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Finaliza o estado de carregamento
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  // Função para enviar mensagens para o backend (bot)
+  const sendMessageToBot = useCallback(async (messageText, isUserMessage = true, isExercise = false) => {
+    setIsLoading(true);
+    setLastMessageIsExercise(isExercise);
+    setHasEvaluatedLastExercise(false); // Reinicia o status de avaliação para um novo exercício
 
     const userMessage = {
       id: uuidv4(),
-      text: inputMessage,
-      sender: "user",
+      text: messageText,
+      sender: 'user',
       timestamp: new Date().toLocaleTimeString(),
     };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage('');
 
-    await sendMessageToBackend(inputMessage, currentMode, currentTopic);
-  };
-
-  const handleSuggestedQuestionClick = async (question) => {
-    const userMessage = {
-      id: uuidv4(),
-      text: question,
-      sender: "user",
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage('');
-
-    if (question.toLowerCase().includes('gerar exercício') || question.toLowerCase().includes('gerar exercicio')) {
-      setTotalExercisesAttempted(prev => prev + 1);
+    if (isUserMessage) {
+      setMessages((prev) => [...prev, userMessage]); // Adiciona a mensagem do usuário ao chat
+      setInputMessage(''); // Limpa o campo de input
+    } else {
+      // Se não for uma mensagem do usuário (ex: mensagem interna do tutor), apenas adiciona
+      setMessages((prev) => [...prev, userMessage]);
     }
 
-    await sendMessageToBackend(question, currentMode, currentTopic);
-  };
-
-  const handleTopicSelect = (topicKey) => {
-    setCurrentTopic(topicKey);
-    setCurrentPage('chat');
-    setMessages([]);
-    setTotalExercisesAttempted(0);
-    setCorrectExercisesCount(0);
-    setLastMessageIsExercise(false);
-    setHasEvaluatedLastExercise(false);
-    sendMessageToBackend(`Comece a me ensinar sobre "${learningTopics[topicKey]?.name}".`, currentMode, topicKey);
-  };
-
-  const handleTopicChange = async (event) => {
-    const newTopicKey = event.target.value;
-    const newTopicName = learningTopics[newTopicKey]?.name || "Tópico Desconhecido";
-
-    const userMessage = {
-      id: uuidv4(),
-      text: `Mudei para o tópico: ${newTopicName}.`,
-      sender: "user",
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setCurrentTopic(newTopicKey);
-    setNextTopicSuggestion(null);
-    setTotalExercisesAttempted(0);
-    setCorrectExercisesCount(0);
-    setLastMessageIsExercise(false);
-    setHasEvaluatedLastExercise(false);
-
-    await sendMessageToBackend(`Inicie a conversa sobre o tópico: ${newTopicName}.`, currentMode, newTopicKey);
-  };
-
-  const handleModeChange = async (event) => {
-    const newMode = event.target.value;
-    const userMessage = {
-      id: uuidv4(),
-      text: `Mudei o modo para: ${newMode}.`,
-      sender: "user",
-      timestamp: new Date().toLocaleTimeString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setCurrentMode(newMode);
-    await sendMessageToBackend(`A partir de agora, responda no modo: ${newMode}.`, newMode, currentTopic);
-  };
-
-  const handleFeedback = async (messageId, feedbackType, messageText) => {
     try {
-      // Ajuste a URL para usar o proxy do Vercel /api
-      const response = await fetch('/api/feedback', {
+      const payload = {
+        message: messageText,
+        session_id: sessionId,
+        user_name: userData.name,
+        user_email: userData.email,
+        difficulty: currentMode,
+        topic: currentTopic,
+      };
+
+      const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageId, feedbackType, messageText, sessionId }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -212,74 +132,107 @@ function App() {
       }
 
       const data = await response.json();
-      console.log(data.message);
 
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === messageId
-            ? { ...msg, feedback: feedbackType, feedbackShown: true }
-            : msg
-        )
-      );
+      if (!sessionId) {
+        setSessionId(data.session_id); // Define o ID da sessão se ainda não estiver definido
+      }
 
-      setTimeout(() => {
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.id === messageId ? { ...msg, feedbackShown: false } : msg
-          )
-        );
-      }, 2000);
+      const tutorMessage = {
+        id: uuidv4(),
+        text: data.response,
+        sender: 'tutor',
+        timestamp: new Date().toLocaleTimeString(),
+        isExercise: data.is_exercise, // Indica se a resposta do tutor é um exercício
+      };
+
+      setMessages((prev) => [...prev, tutorMessage]); // Adiciona a resposta do tutor ao chat
+      setNextTopicSuggestion(data.next_topic_suggestion); // Atualiza a sugestão de próximo tópico
+      setLastMessageIsExercise(data.is_exercise); // Atualiza o estado se a última mensagem é um exercício
+
     } catch (error) {
-      console.error("Erro ao enviar feedback:", error);
+      console.error('Erro ao enviar mensagem:', error);
+      // Adiciona uma mensagem de erro ao chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uuidv4(),
+          text: 'Desculpe, houve um erro ao processar sua solicitação. Tente novamente.',
+          sender: 'tutor',
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false); // Finaliza o estado de carregamento
+    }
+  }, [sessionId, userData, currentMode, currentTopic]); // Dependências do useCallback
+
+  // Função para enviar a mensagem do input
+  const handleSendMessage = (e) => {
+    e.preventDefault(); // Previne o comportamento padrão do formulário
+    if (inputMessage.trim() && !isLoading) {
+      sendMessageToBot(inputMessage);
     }
   };
 
+  // Função para enviar uma mensagem inicial quando um tópico é selecionado
+  const sendInitialTopicMessage = (topicKey) => {
+    const topicName = learningTopics[topicKey]?.name || topicKey;
+    const initialMessage = `Olá! Gostaria de aprender sobre "${topicName}" no modo ${currentMode}.`;
+    sendMessageToBot(initialMessage, true); // Envia como mensagem do usuário
+  };
+
+  // Função para lidar com a mudança de tópico no ChatHeader
+  const handleTopicChange = (e) => {
+    const newTopic = e.target.value;
+    setCurrentTopic(newTopic);
+    sendInitialTopicMessage(newTopic); // Envia mensagem inicial para o novo tópico
+  };
+
+  // Função para lidar com a mudança de modo de dificuldade
+  const handleModeChange = (e) => {
+    const newMode = e.target.value;
+    setCurrentMode(newMode);
+    // Opcional: enviar uma mensagem ao bot informando a mudança de modo
+    sendMessageToBot(`Mudei o modo de dificuldade para "${newMode}".`, false);
+  };
+
+  // Função para lidar com o clique em uma pergunta sugerida
+  const handleSuggestedQuestionClick = (question) => {
+    sendMessageToBot(question);
+  };
+
+  // Função para lidar com o feedback do usuário sobre as respostas do tutor
+  const handleFeedback = (messageId, feedbackType, messageText) => {
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === messageId ? { ...msg, feedback: feedbackType, feedbackShown: true } : msg
+      )
+    );
+    // Enviar feedback para o backend (opcional)
+    // console.log(`Feedback ${feedbackType} para a mensagem: ${messageText}`);
+  };
+
+  // Função para avaliar um exercício
   const handleExerciseEvaluation = (isCorrect) => {
-    if (hasEvaluatedLastExercise) return;
-
+    setTotalExercisesAttempted((prev) => prev + 1);
     if (isCorrect) {
-      setCorrectExercisesCount(prev => prev + 1);
+      setCorrectExercisesCount((prev) => prev + 1);
     }
-    setHasEvaluatedLastExercise(true);
-    setLastMessageIsExercise(false);
-  };
-
-  const toggleTheme = () => setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-
-  const handleHomeComplete = (data) => {
-    setUserData(data);
-    // Após a conclusão da Home, agora vai direto para a trilha de aprendizado.
-    setCurrentPage('path'); 
-  };
-
-  const handleBackToPath = () => {
-    setCurrentPage('path');
-    setCurrentTopic('html_intro');
-    setMessages([]);
-    setTotalExercisesAttempted(0);
-    setCorrectExercisesCount(0);
-    setLastMessageIsExercise(false);
-    setHasEvaluatedLastExercise(false);
+    setHasEvaluatedLastExercise(true); // Marca o exercício como avaliado
+    // Opcional: enviar feedback de avaliação do exercício para o backend
+    sendMessageToBot(`Marquei o exercício como ${isCorrect ? 'correto' : 'incorreto'}.`, false);
   };
 
   return (
     <div className="app-container">
-      {currentPage === 'home' && (
-        <Home onStartJourney={handleHomeComplete} />
-      )}
+      {currentPage === 'home' && <Home onStartJourney={handleStartJourney} />}
 
-      {/* A seção de personalização do avatar foi removida */}
-
-      {currentPage === 'path' && (
-        <LearningPath
-          learningTopics={learningTopics}
-          onTopicSelect={handleTopicSelect}
-          currentTopic={currentTopic}
-        />
+      {currentPage === 'learningPath' && (
+        <LearningPath learningTopics={learningTopics} onTopicSelect={handleTopicSelect} currentTopic={currentTopic} />
       )}
 
       {currentPage === 'chat' && (
-        <div className="chat-container">
+        <div className="chat-interface w-full flex flex-col h-full">
           <ChatHeader
             currentTopic={currentTopic}
             learningTopics={learningTopics}
@@ -302,7 +255,7 @@ function App() {
             isLoading={isLoading}
             handleFeedback={handleFeedback}
             lastMessageIsExercise={lastMessageIsExercise}
-            hasEvaluatedLastExercise={hasEvalualedLastExercise}
+            hasEvaluatedLastExercise={hasEvaluatedLastExercise}
             handleExerciseEvaluation={handleExerciseEvaluation}
           />
 
