@@ -5,7 +5,7 @@
 
 /* Estilos Gerais */
 body {
-  /* Usando classes Tailwind para margem, fonte, flexbox, alinhamento, altura mínima, e transições de color */
+  /* Usando classes Tailwind para margem, fonte, flexbox, alinhamento, altura mínima, e transições de cor */
   @apply m-0 font-sans flex justify-center items-center min-h-screen transition-colors duration-300;
 }
 
@@ -39,15 +39,13 @@ button, select {
 }
 
 /* ------------------------------------- */
-/* Estilos para AvatarCustomization.jsx - REMOVIDOS */
-/* ------------------------------------- */
-/* Todo o conteúdo de estilo relacionado ao avatar foi removido daqui. */
-
-/* ------------------------------------- */
 /* Estilos para LearningPath.jsx */
 /* ------------------------------------- */
 .learning-path-container {
-  @apply w-full max-w-4xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 relative overflow-hidden;
+  /* Alterado overflow-hidden para overflow-y-auto para permitir rolagem vertical */
+  @apply w-full max-w-4xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 relative overflow-y-auto;
+  /* Adicionado min-height para garantir que o container da trilha tenha altura suficiente */
+  min-height: 80vh; /* Ajuste conforme a necessidade, ou remova se o conteúdo for sempre maior */
 }
 
 .learning-path-container h2 {
@@ -55,16 +53,19 @@ button, select {
 }
 
 .path-line {
+  /* A altura da linha agora se estende por todo o container rolável */
   @apply absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-300 dark:bg-blue-600 z-0;
   top: 0;
 }
 
 .topic-cards-wrapper {
   @apply relative z-10;
+  /* Adicionado um espaçamento inferior para garantir que o último cartão não seja cortado */
+  padding-bottom: 50px;
 }
 
 .topic-card {
-  @apply relative bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-md mb-8 cursor-pointer transition-all duration-300 ease-in-out border-2 border-transparent; /* Alterado dark:bg-gray-700 para dark:bg-gray-900 */
+  @apply relative bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-md mb-8 cursor-pointer transition-all duration-300 ease-in-out border-2 border-transparent;
   width: 90%; /* Ajuste para caber na tela */
   max-width: 400px; /* Limite a largura para melhor leitura */
 }
@@ -74,7 +75,7 @@ button, select {
 }
 
 .topic-card.active {
-  @apply border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900 shadow-xl; /* Alterado dark:bg-blue-900/30 para dark:bg-blue-900 */
+  @apply border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900 shadow-xl;
 }
 
 .topic-card h3 {
@@ -82,7 +83,7 @@ button, select {
 }
 
 .topic-card p {
-  @apply text-gray-700 dark:text-gray-100 text-sm; /* Alterado para dark:text-gray-100 para melhor contraste */
+  @apply text-gray-700 dark:text-gray-100 text-sm;
 }
 
 .topic-card.left-aligned {
@@ -100,7 +101,7 @@ button, select {
 
 /* Estilos existentes (mantidos para outros componentes) */
 .suggested-question-button {
-  @apply flex-shrink-0 min-w-0 md:min-w-[150px] whitespace-nowrap text-nowrap py-2 px-4 rounded-full text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300; /* Corrigido duration-250 para duration-300 */
+  @apply flex-shrink-0 min-w-0 md:min-w-[150px] whitespace-nowrap text-nowrap py-2 px-4 rounded-full text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300;
 }
 
 .suggested-question-button:disabled {
@@ -141,7 +142,7 @@ button, select {
 
 /* Adições para o ChatHeader */
 .chat-header .controls {
-  @apply flex flex-wrap justify-center items-center gap-4; /* Adiciona flexbox e gap para espaçamento */
+  @apply flex flex-wrap justify-center items-center gap-4;
 }
 
 .chat-header .controls select {

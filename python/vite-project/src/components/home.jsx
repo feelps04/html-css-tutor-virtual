@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FaDiscord } from 'react-icons/fa'; // Importa o ícone do Discord
 import meuAvatar from '../assets/img/meu_avatar.png'; // Importa a imagem do avatar

@@ -1,3 +1,4 @@
+
     import React, { useRef, useEffect } from 'react';
     import ReactMarkdown from 'react-markdown';
     import CodeBlock from './CodeBlock'; // Certifique-se que o caminho esteja correto

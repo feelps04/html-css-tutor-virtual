@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaDiscord } from 'react-icons/fa'; // Importa o ícone do Discord
-import meuAvatar from '../assets/img/meu_avatar.png'; // Importa a imagem do avatar
+import meuAvatar from '../assets/img/meu_avatarr.png'; // Caminho absoluto a partir da raiz pública 
 
 const Home = ({ onStartJourney }) => {
   const [userName, setUserName] = useState('');
@@ -11,7 +11,7 @@ const Home = ({ onStartJourney }) => {
   const isValidName = (name) => {
     // Regex para permitir apenas letras (maiúsculas e minúsculas, incluindo acentos) e espaços
     return /^[\p{L}\s]+$/u.test(name);
-  };
+  };z
 
   const handleSubmit = async (e) => {
     e.preventDefault();
