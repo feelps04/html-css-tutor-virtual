@@ -40,15 +40,5 @@
         "runtime": "python3.9"
       }
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/backend/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/python/vite-project/dist/index.html"
-    }
   ]
 }
