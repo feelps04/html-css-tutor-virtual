@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     outDir: 'dist', // A pasta de saída para os arquivos compilados
     rollupOptions: {
-      // CORREÇÃO: Aponta para o index.html diretamente na raiz de 'vite-project/'
+      // CORREÇÃO ESSENCIAL: Aponta para o index.html diretamente na raiz de 'vite-project/'
       input: 'index.html', 
     },
   },
