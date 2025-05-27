@@ -6,7 +6,6 @@ import google.generativeai as genai
 import traceback
 import uuid # Importa a biblioteca uuid para gerar IDs de sessão
 import datetime # Para timestamps no log de feedback
-# REMOVIDO: from google.api_core import exceptions # Importa as exceções da API Core
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -22,7 +21,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-pro') # Mantendo gemini-pro como estava no seu código atual
+        gemini_model = genai.GenerativeModel('gemini-pro')
         print("Modelo Gemini-pro carregado com sucesso.")
     except Exception as e:
         print(f"Erro ao configurar a API ou carregar o modelo Gemini: {e}")
@@ -196,7 +195,7 @@ def chat():
         print(f"Sua pergunta foi bloqueada pela API do Gemini. Razao: {block_reason}")
         tutor_reply = f"Sua pergunta foi bloqueada por razoes de seguranca: {block_reason}. Por favor, tente reformular."
         return jsonify({"reply": tutor_reply, "sessionId": session_id}), 400
-    except genai.types.ClientError as e: # genai.types.ClientError substitui google.api_core.exceptions.GoogleAPICallError
+    except genai.types.ClientError as e:
         print(f"Erro da API do Gemini (ClientError): {e}")
         traceback.print_exc() # Imprime o stack trace para depuração
         return jsonify({"error": f"Erro da API do Gemini: {str(e)}", "sessionId": session_id}), 500
@@ -261,5 +260,4 @@ def get_scores():
         return jsonify({"correct": 0, "total": 0})
     return jsonify(session_exercise_scores[session_id])
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
