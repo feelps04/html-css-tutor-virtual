@@ -9,6 +9,34 @@ body {
   @apply m-0 font-sans flex justify-center items-center min-h-screen transition-colors duration-300;
 }
 
+/* Styles for loading spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #09f;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* Temas */
 /* As classes light-theme e dark-theme no body devem ser controladas via JavaScript. */
 /* As cores específicas para cada tema serão aplicadas diretamente nos componentes usando classes Tailwind e variantes dark: */

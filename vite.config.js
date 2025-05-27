@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
   ],
   server: {
+    port: 3000, // Set the development server port to 3000
     proxy: {
       '/api': {
         target: 'http://localhost:5000', // Aponta para a porta do seu backend Flask
@@ -19,7 +20,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'index.html', // Ou 'public/index.html' se o seu index.html estiver dentro da pasta public/
+      input: 'public/index.html', // O index.html está dentro da pasta public/
+      output: {
+        manualChunks: {
+          // Split React and React DOM into a separate chunk
+          'react-vendor': ['react', 'react-dom'],
+          
+          // Split other UI-related dependencies
+          'ui-vendor': ['react-icons'],
+          
+          // Create a chunk for markdown/code highlighting
+          'markdown-vendor': ['react-markdown', 'highlight.js'],
+          
+          // Create a chunk for utility libraries if you have any
+          'utils-vendor': [] // Add utility libraries here if you have any
+        }
+      }
     },
   },
   base: '/'
