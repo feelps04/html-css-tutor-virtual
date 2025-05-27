@@ -1,7 +1,23 @@
 
-    import React, { useRef, useEffect } from 'react';
+    import React, { useRef, useEffect, lazy, Suspense } from 'react';
     import ReactMarkdown from 'react-markdown';
-    import CodeBlock from './CodeBlock'; // Certifique-se que o caminho esteja correto
+
+    // Lazy load the CodeBlock component
+    const CodeBlock = lazy(() => import('./CodeBlock'));
+
+    // Simple loading component for code blocks
+    const CodeBlockLoading = () => (
+      <div className="code-block-loading">
+        <p>Loading code...</p>
+      </div>
+    );
+
+    // Custom renderer for code that uses lazy-loaded CodeBlock with Suspense
+    const CodeRenderer = (props) => (
+      <Suspense fallback={<CodeBlockLoading />}>
+        <CodeBlock {...props} />
+      </Suspense>
+    );
 
     const MessagesDisplay = ({
       messages,
@@ -21,7 +37,7 @@
         <div className="messages-display">
           {messages.map((msg) => (
             <div key={msg.id} className={`message ${msg.sender}`}>
-              <ReactMarkdown components={{ code: CodeBlock }}>{msg.text}</ReactMarkdown>
+              <ReactMarkdown components={{ code: CodeRenderer }}>{msg.text}</ReactMarkdown>
               <span className="timestamp">{msg.timestamp}</span>
               {msg.sender === "tutor" && !msg.feedback && (
                 <div className="feedback-buttons">

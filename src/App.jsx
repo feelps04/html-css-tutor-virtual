@@ -1,12 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ChatHeader from './components/ChatHeader';
-import MessagesDisplay from './components/MessagesDisplay';
-import MessageInput from './components/MessageInput';
-import ScoreDisplay from './components/ScoreDisplay';
-import LearningPath from './components/LearningPath';
-import Home from './components/home';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import './App.css';
 import './styles/global.css'; // Seus estilos globais (incluindo variáveis de tema)
+
+// Lazy load components
+const ChatHeader = React.lazy(() => import('./components/ChatHeader'));
+const MessagesDisplay = React.lazy(() => import('./components/MessagesDisplay'));
+const MessageInput = React.lazy(() => import('./components/MessageInput'));
+const ScoreDisplay = React.lazy(() => import('./components/ScoreDisplay'));
+const LearningPath = React.lazy(() => import('./components/LearningPath'));
+const Home = React.lazy(() => import('./components/home'));
+
+// Simple loading component
+const Loading = () => (
+  <div className="loading-spinner">
+    <div className="spinner"></div>
+    <p>Carregando...</p>
+  </div>
+);
 
 function App() {
   const [sessionId, setSessionId] = useState(null);
@@ -360,50 +370,58 @@ function App() {
 
   // Se não houver sessionId e userName, exibe a tela inicial (Home)
   if (!sessionId && !userName) {
-    return <Home onStartJourney={handleStartJourney} />;
+    return (
+      <Suspense fallback={<Loading />}>
+        <Home onStartJourney={handleStartJourney} />
+      </Suspense>
+    );
   }
 
   return (
     <div className={`app-container`}>
       {showLearningPath ? (
-        <LearningPath
-          learningTopics={learningTopics}
-          onTopicSelect={handleTopicSelect}
-          currentTopic={currentTopic}
-        />
+        <Suspense fallback={<Loading />}>
+          <LearningPath
+            learningTopics={learningTopics}
+            onTopicSelect={handleTopicSelect}
+            currentTopic={currentTopic}
+          />
+        </Suspense>
       ) : (
         <div className="chat-container">
-          <ChatHeader
-            currentTopic={currentTopic}
-            learningTopics={learningTopics}
-            handleTopicChange={handleTopicChange}
-            currentMode={currentMode}
-            handleModeChange={handleModeChange}
-            theme={theme}
-            toggleTheme={toggleTheme}
-            onBackToPath={handleBackToPath}
-            isLoading={isLoading}
-          />
-          <MessagesDisplay
-            messages={messages}
-            isLoading={isLoading}
-            handleFeedback={handleFeedback}
-            lastMessageIsExercise={lastMessageIsExercise}
-            hasEvaluatedLastExercise={hasEvaluatedLastExercise}
-            handleExerciseEvaluation={handleExerciseEvaluation}
-          />
-          <MessageInput
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            handleSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            suggestedQuestions={suggestedQuestions} {/* Adicionado */}
-            onSuggestedQuestionClick={handleSuggestedQuestionClick} {/* Adicionado */}
-          />
-          <ScoreDisplay
-            correctExercisesCount={correctExercisesCount}
-            totalExercisesAttempted={totalExercisesAttempted}
-          />
+          <Suspense fallback={<Loading />}>
+            <ChatHeader
+              currentTopic={currentTopic}
+              learningTopics={learningTopics}
+              handleTopicChange={handleTopicChange}
+              currentMode={currentMode}
+              handleModeChange={handleModeChange}
+              theme={theme}
+              toggleTheme={toggleTheme}
+              onBackToPath={handleBackToPath}
+              isLoading={isLoading}
+            />
+            <MessagesDisplay
+              messages={messages}
+              isLoading={isLoading}
+              handleFeedback={handleFeedback}
+              lastMessageIsExercise={lastMessageIsExercise}
+              hasEvaluatedLastExercise={hasEvaluatedLastExercise}
+              handleExerciseEvaluation={handleExerciseEvaluation}
+            />
+            <MessageInput
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              suggestedQuestions={suggestedQuestions} /* Adicionado */
+              onSuggestedQuestionClick={handleSuggestedQuestionClick} /* Adicionado */
+            />
+            <ScoreDisplay
+              correctExercisesCount={correctExercisesCount}
+              totalExercisesAttempted={totalExercisesAttempted}
+            />
+          </Suspense>
         </div>
       )}
     </div>
