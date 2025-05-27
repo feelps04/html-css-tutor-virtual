@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { FaDiscord } from 'react-icons/fa'; // Importa o ícone do Discord
-import meuAvatar from '../assets/img/meu_avatarr.png'; // Corrected path to avatar image
+import React, { useState, lazy, Suspense } from 'react';
+// Dynamic import for Discord icon
+const FaDiscord = lazy(() => import('react-icons/fa').then(module => ({
+  default: module.FaDiscord
+})));
+// Import optimized avatar image
+import meuAvatar from '../assets/img/meu_avatarr.png'; // This will be optimized by vite-imagemin
 
 const Home = ({ onStartJourney }) => {
   const [userName, setUserName] = useState('');
@@ -53,6 +57,7 @@ const Home = ({ onStartJourney }) => {
         src={meuAvatar}
         alt="Avatar do Tutor"
         className="w-32 h-32 rounded-full mb-6 border-4 border-blue-500 dark:border-blue-400 shadow-md"
+        loading="lazy"
       />
       <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-200">Bem-vindo ao Tutor Web!</h2>
       <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
@@ -111,7 +116,9 @@ const Home = ({ onStartJourney }) => {
           rel="noopener noreferrer" 
           className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-300"
         >
-          <FaDiscord className="text-3xl mr-2" />
+          <Suspense fallback={<div className="w-6 h-6 mr-2 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>}>
+            <FaDiscord className="text-3xl mr-2" />
+          </Suspense>
           <span className="text-lg font-semibold">Junte-se ao nosso Discord</span>
         </a>
       </div>
