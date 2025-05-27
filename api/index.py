@@ -264,5 +264,4 @@ def get_scores():
         return jsonify({"correct": 0, "total": 0})
     return jsonify(session_exercise_scores[session_id])
 
-if __name__ == '__main__':
-    app.run(debug=True)
+

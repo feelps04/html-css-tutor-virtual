@@ -6,7 +6,7 @@ import ScoreDisplay from './components/ScoreDisplay';
 import LearningPath from './components/LearningPath';
 import Home from './components/home';
 import './App.css';
-import './styles/global.css';
+import './styles/global.css'; // Seus estilos globais (incluindo variáveis de tema)
 
 function App() {
   const [sessionId, setSessionId] = useState(null);
@@ -23,7 +23,9 @@ function App() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   const [learningTopics, setLearningTopics] = useState({});
-  const [showLearningPath, setShowLearningPath] = useState(false);
+  // Estado inicial para mostrar a tela de login.
+  // A trilha de aprendizado será mostrada após o login.
+  const [showLearningPath, setShowLearningPath] = useState(false); 
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [correctExercisesCount, setCorrectExercisesCount] = useState(0);
@@ -32,6 +34,7 @@ function App() {
   const [hasEvaluatedLastExercise, setHasEvaluatedLastExercise] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
+  // Função para gerar perguntas sugeridas com base no tópico e modo
   const generateSuggestedQuestions = useCallback((topicKey, mode) => {
     const questions = [];
     const topicName = learningTopics[topicKey]?.name || 'este tópico';
@@ -50,16 +53,18 @@ function App() {
       questions.push(`Compare ${topicName} com tecnologias alternativas.`);
     }
 
+    // Adicionar perguntas gerais independentemente do modo/tópico
     questions.push("Poderia me dar um exercício sobre o tema atual?");
     questions.push("Quais os próximos passos na trilha de aprendizado?");
 
     return questions;
   }, [learningTopics]);
 
+  // Efeito para carregar os tópicos de aprendizado do backend
   useEffect(() => {
     const fetchLearningTopics = async () => {
       try {
-        const response = await fetch('/api/get-learning-topics');
+        const response = await fetch('/api/get-learning-topics'); // ALTERADO: Caminho relativo
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -73,12 +78,14 @@ function App() {
     fetchLearningTopics();
   }, []);
 
+  // Efeito para gerar perguntas sugeridas sempre que o tópico ou modo muda
   useEffect(() => {
     if (Object.keys(learningTopics).length > 0) {
       setSuggestedQuestions(generateSuggestedQuestions(currentTopic, currentMode));
     }
   }, [currentTopic, currentMode, generateSuggestedQuestions, learningTopics]);
 
+  // Efeito para aplicar a classe 'dark' ao elemento html e salvar a preferência
   useEffect(() => {
     const htmlElement = document.documentElement;
     if (theme === 'dark') {
@@ -89,16 +96,21 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Efeito para carregar o histórico e a sessão se existir
+  // A lógica de restauração automática da sessão foi removida daqui
+  // para garantir que a tela Home sempre apareça primeiro.
   useEffect(() => {
+    // Apenas carrega o tema salvo, se houver.
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       setTheme(storedTheme);
     }
   }, []);
 
+
   const fetchScores = async (currentSessionId) => {
     try {
-      const response = await fetch(`/api/get-scores?sessionId=${currentSessionId}`);
+      const response = await fetch(`/api/get-scores?sessionId=${currentSessionId}`); // ALTERADO: Caminho relativo
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -110,6 +122,7 @@ function App() {
     }
   };
 
+  // Efeito para salvar a sessão e configurações no localStorage/sessionStorage
   useEffect(() => {
     if (sessionId) {
       localStorage.setItem('sessionId', sessionId);
@@ -118,15 +131,16 @@ function App() {
       localStorage.setItem('userName', userName);
       localStorage.setItem('userEmail', userEmail);
     }
-    sessionStorage.setItem('chatMessages', JSON.stringify(messages));
+    sessionStorage.setItem('chatMessages', JSON.stringify(messages)); // Salva mensagens
     localStorage.setItem('correctExercisesCount', correctExercisesCount);
     localStorage.setItem('totalExercisesAttempted', totalExercisesAttempted);
+
   }, [sessionId, currentTopic, currentMode, messages, userName, userEmail, correctExercisesCount, totalExercisesAttempted]);
 
   const handleStartJourney = async (name, email) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/start-session', {
+      const response = await fetch('/api/start-session', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName: name, userEmail: email }),
@@ -142,19 +156,22 @@ function App() {
       setCurrentMode(data.currentMode);
       setUserName(name);
       setUserEmail(email);
-      setShowLearningPath(true);
-      setMessages([]);
+      setShowLearningPath(true); // Vai para a trilha após o login
+      setMessages([]); // Limpa mensagens para nova sessão
       setCorrectExercisesCount(0);
       setTotalExercisesAttempted(0);
       setLastMessageIsExercise(false);
       setHasEvaluatedLastExercise(false);
     } catch (error) {
       console.error("Erro ao iniciar a sessão:", error);
+      // Usar uma modal ou mensagem na UI em vez de alert
+      // alert("Falha ao iniciar a sessão. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Nova função para enviar a mensagem do usuário para o tutor
   const sendUserMessageToTutor = async (messageText) => {
     if (!messageText.trim() || !sessionId || isLoading) return;
 
@@ -165,17 +182,17 @@ function App() {
       timestamp: new Date().toLocaleTimeString(),
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setInputMessage('');
+    setInputMessage(''); // Limpa o input após enviar
     setIsLoading(true);
     setLastMessageIsExercise(false);
     setHasEvaluatedLastExercise(false);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: messageText,
+          message: messageText, // Usa o messageText passado como argumento
           sessionId: sessionId,
           currentTopic: currentTopic,
           currentMode: currentMode,
@@ -212,6 +229,7 @@ function App() {
     }
   };
 
+  // handleSendMessage agora apenas chama a nova função sendUserMessageToTutor
   const handleSendMessage = async (e) => {
     e.preventDefault();
     sendUserMessageToTutor(inputMessage);
@@ -221,19 +239,21 @@ function App() {
     const newTopic = e.target.value;
     setCurrentTopic(newTopic);
     const initialMessage = `Estou a começar o tópico: ${learningTopics[newTopic]?.name}.`;
-    sendUserMessageToTutor(initialMessage);
+    sendUserMessageToTutor(initialMessage); // Envia a mensagem inicial ao tutor
   };
 
   const handleModeChange = (e) => {
     const newMode = e.target.value;
     setCurrentMode(newMode);
     const initialMessage = `Mudei para o modo ${newMode}.`;
-    sendUserMessageToTutor(initialMessage);
+    sendUserMessageToTutor(initialMessage); // Envia a mensagem inicial ao tutor
   };
+
+  // sendInitialMessageToTutor foi removida, pois sendUserMessageToTutor a substitui
 
   const handleFeedback = async (messageId, feedbackType, messageText) => {
     try {
-      const response = await fetch('/api/feedback', {
+      const response = await fetch('/api/feedback', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageId, feedbackType, messageText, sessionId }),
@@ -266,25 +286,27 @@ function App() {
 
   const handleTopicSelect = (topicKey) => {
     setCurrentTopic(topicKey);
-    setShowLearningPath(false);
-    setMessages([]);
-    setLastMessageIsExercise(false);
-    setHasEvaluatedLastExercise(false);
+    setShowLearningPath(false); // Esconde a trilha para mostrar o chat
+    setMessages([]); // Limpa as mensagens ao mudar de tópico
+    setLastMessageIsExercise(false); // Reseta o estado do exercício
+    setHasEvaluatedLastExercise(false); // Reseta a avaliação do exercício
 
     const topicName = learningTopics[topicKey]?.name || topicKey;
+    // Gera uma pergunta para o usuário e a envia automaticamente
     const suggested = generateSuggestedQuestions(topicKey, currentMode);
     if (suggested.length > 0) {
-      sendUserMessageToTutor(suggested[0]);
+      sendUserMessageToTutor(suggested[0]); // Envia a primeira pergunta sugerida automaticamente
     } else {
+      // Se não houver sugestões, ainda envia uma mensagem inicial
       sendUserMessageToTutor(`Olá! Estou pronto para aprender sobre "${topicName}".`);
     }
   };
 
   const handleExerciseEvaluation = async (isCorrect) => {
-    setHasEvaluatedLastExercise(true);
+    setHasEvaluatedLastExercise(true); // Marca que o exercício foi avaliado
 
     try {
-      const response = await fetch('/api/exercise-evaluation', {
+      const response = await fetch('/api/exercise-evaluation', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, isCorrect }),
@@ -302,10 +324,12 @@ function App() {
     }
   };
 
+  // Nova função para lidar com o clique nas perguntas sugeridas
   const handleSuggestedQuestionClick = (question) => {
-    sendUserMessageToTutor(question);
+    sendUserMessageToTutor(question); // Envia a pergunta sugerida diretamente
   };
 
+  // Se não houver sessionId e userName, exibe a tela inicial (Home)
   if (!sessionId && !userName) {
     return <Home onStartJourney={handleStartJourney} />;
   }
