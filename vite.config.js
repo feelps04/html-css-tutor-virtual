@@ -7,9 +7,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: 'index.html',
+      // CORREÇÃO: Aponta para o index.html dentro da pasta 'public'
+      input: 'public/index.html', 
     },
   },
-  
+  // O proxy foi removido pois é apenas para desenvolvimento local
+  // server: {
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://127.0.0.1:5000',
+  //       changeOrigin: true,
+  //       rewrite: (path) => path.replace(/^\/api/, ''),
+  //     },
+  //   },
+  // },
   base: '/'
 });
