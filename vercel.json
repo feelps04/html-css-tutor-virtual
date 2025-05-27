@@ -1,20 +1,13 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.9"
-      }
+      "use": "@vercel/python"
     },
     {
-      "src": "vite-project/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "config": { "outputDirectory": "dist" }
     }
   ],
   "routes": [
@@ -24,9 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/vite-project/$1"
+      "dest": "dist/$1"
     }
-  ],
-  "installCommand": "pip install -r api/requirements.txt && cd vite-project && npm install",
-  "buildCommand": "cd vite-project && npm run vercel-build"
+  ]
 }
