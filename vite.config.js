@@ -3,23 +3,14 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  root: './',
+  root: './', // Onde o Vite considera a raiz do seu projeto (vite-project/)
   build: {
-    outDir: 'dist',
+    outDir: 'dist', // A pasta de saída para os arquivos compilados
     rollupOptions: {
-      // CORREÇÃO: Aponta para o index.html dentro da pasta 'public'
-      input: 'public/index.html', 
+      // CORREÇÃO: Aponta para o index.html diretamente na raiz de 'vite-project/'
+      input: 'index.html', 
     },
   },
-  // O proxy foi removido pois é apenas para desenvolvimento local
-  // server: {
-  //   proxy: {
-  //     '/api': {
-  //       target: 'http://127.0.0.1:5000',
-  //       changeOrigin: true,
-  //       rewrite: (path) => path.replace(/^\/api/, ''),
-  //     },
-  //   },
-  // },
+  // 'base' define o caminho base para servir os ativos (importante para deploy)
   base: '/'
 });

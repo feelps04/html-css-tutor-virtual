@@ -1,28 +1,24 @@
 import React from 'react';
+import SuggestedQuestions from './SuggestedQuestions'; // Importe o componente SuggestedQuestions
 
 const MessageInput = ({
   inputMessage,
   setInputMessage,
   handleSendMessage,
   isLoading,
-  suggestedQuestions, // Nova prop
-  onSuggestedQuestionClick, // Nova prop
+  suggestedQuestions, // Adicionado
+  onSuggestedQuestionClick, // Adicionado
 }) => {
   return (
     <form onSubmit={handleSendMessage} className="message-input-form">
+      {/* Adicionado o componente SuggestedQuestions aqui */}
       {suggestedQuestions && suggestedQuestions.length > 0 && (
         <div className="suggested-questions-container">
-          {suggestedQuestions.map((question, index) => (
-            <button
-              key={index}
-              type="button" // Importante: type="button" para não submeter o formulário
-              onClick={() => onSuggestedQuestionClick(question)}
-              className="suggested-question-button"
-              disabled={isLoading}
-            >
-              {question}
-            </button>
-          ))}
+          <SuggestedQuestions
+            suggestedQuestions={suggestedQuestions}
+            onSuggestedQuestionClick={onSuggestedQuestionClick}
+            isLoading={isLoading}
+          />
         </div>
       )}
       <input

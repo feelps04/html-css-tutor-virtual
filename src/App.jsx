@@ -23,14 +23,16 @@ function App() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
   const [learningTopics, setLearningTopics] = useState({});
-  const [showLearningPath, setShowLearningPath] = useState(true); // Estado inicial para mostrar a trilha
+  // Estado inicial para mostrar a tela de login.
+  // A trilha de aprendizado será mostrada após o login.
+  const [showLearningPath, setShowLearningPath] = useState(false); 
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [correctExercisesCount, setCorrectExercisesCount] = useState(0);
   const [totalExercisesAttempted, setTotalExercisesAttempted] = useState(0);
   const [lastMessageIsExercise, setLastMessageIsExercise] = useState(false);
   const [hasEvaluatedLastExercise, setHasEvaluatedLastExercise] = useState(false);
-  const [suggestedQuestions, setSuggestedQuestions] = useState([]); // Novo estado para perguntas sugeridas
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
   // Função para gerar perguntas sugeridas com base no tópico e modo
   const generateSuggestedQuestions = useCallback((topicKey, mode) => {
@@ -56,13 +58,13 @@ function App() {
     questions.push("Quais os próximos passos na trilha de aprendizado?");
 
     return questions;
-  }, [learningTopics]); // Dependência para garantir que learningTopics esteja atualizado
+  }, [learningTopics]);
 
   // Efeito para carregar os tópicos de aprendizado do backend
   useEffect(() => {
     const fetchLearningTopics = async () => {
       try {
-        const response = await fetch('http://localhost:5000/get-learning-topics');
+        const response = await fetch('/api/get-learning-topics'); // ALTERADO: Caminho relativo
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -95,20 +97,51 @@ function App() {
   }, [theme]);
 
   // Efeito para carregar o histórico e a sessão se existir
-  // REMOVIDO: A lógica de restauração automática da sessão foi removida daqui
-  // para garantir que a tela Home sempre apareça primeiro.
   useEffect(() => {
     // Apenas carrega o tema salvo, se houver.
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       setTheme(storedTheme);
     }
-  }, []);
 
+    const storedSessionId = localStorage.getItem('sessionId');
+    const storedTopic = localStorage.getItem('currentTopic');
+    const storedMode = localStorage.getItem('currentMode');
+    const storedMessages = sessionStorage.getItem('chatMessages');
+    const storedUserName = localStorage.getItem('userName');
+    const storedUserEmail = localStorage.getItem('userEmail');
+    const storedCorrectExercises = localStorage.getItem('correctExercisesCount');
+    const storedTotalExercises = localStorage.getItem('totalExercisesAttempted');
+
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+      setShowLearningPath(false); // Se há sessão, pula a tela de login
+      if (storedTopic) setCurrentTopic(storedTopic);
+      if (storedMode) setCurrentMode(storedMode);
+      if (storedMessages) setMessages(JSON.parse(storedMessages));
+      if (storedUserName) setUserName(storedUserName);
+      if (storedUserEmail) setUserEmail(storedUserEmail);
+      setCorrectExercisesCount(parseInt(storedCorrectExercises) || 0);
+      setTotalExercisesAttempted(parseInt(storedTotalExercises) || 0);
+      fetchScores(storedSessionId); // Pega as pontuações do backend
+
+      // Inicializa o histórico da sessão no backend, se necessário
+      // ALTERADO: Caminho relativo
+      fetch('/api/start-session', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userName: storedUserName, userEmail: storedUserEmail, sessionId: storedSessionId })
+      }).then(response => response.json())
+        .then(data => {
+          console.log("Sessão reativada no backend.");
+        })
+        .catch(error => console.error("Erro ao reativar sessão:", error));
+    }
+  }, []); // Dependência vazia para rodar apenas uma vez na montagem
 
   const fetchScores = async (currentSessionId) => {
     try {
-      const response = await fetch(`http://localhost:5000/get-scores?sessionId=${currentSessionId}`);
+      const response = await fetch(`/api/get-scores?sessionId=${currentSessionId}`); // ALTERADO: Caminho relativo
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -138,7 +171,7 @@ function App() {
   const handleStartJourney = async (name, email) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/start-session', {
+      const response = await fetch('/api/start-session', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName: name, userEmail: email }),
@@ -186,7 +219,7 @@ function App() {
     setHasEvaluatedLastExercise(false);
 
     try {
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch('/api/chat', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -247,11 +280,9 @@ function App() {
     sendUserMessageToTutor(initialMessage); // Envia a mensagem inicial ao tutor
   };
 
-  // sendInitialMessageToTutor foi removida, pois sendUserMessageToTutor a substitui
-
   const handleFeedback = async (messageId, feedbackType, messageText) => {
     try {
-      const response = await fetch('http://localhost:5000/feedback', {
+      const response = await fetch('/api/feedback', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageId, feedbackType, messageText, sessionId }),
@@ -304,7 +335,7 @@ function App() {
     setHasEvaluatedLastExercise(true); // Marca que o exercício foi avaliado
 
     try {
-      const response = await fetch('http://localhost:5000/exercise-evaluation', {
+      const response = await fetch('/api/exercise-evaluation', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, isCorrect }),
@@ -358,7 +389,7 @@ function App() {
             isLoading={isLoading}
             handleFeedback={handleFeedback}
             lastMessageIsExercise={lastMessageIsExercise}
-            hasEvaluatedLastExercise={hasEvaluatesLastExercise}
+            hasEvaluatedLastExercise={hasEvaluatedLastExercise}
             handleExerciseEvaluation={handleExerciseEvaluation}
           />
           <MessageInput
@@ -366,8 +397,8 @@ function App() {
             setInputMessage={setInputMessage}
             handleSendMessage={handleSendMessage}
             isLoading={isLoading}
-            suggestedQuestions={suggestedQuestions}
-            onSuggestedQuestionClick={handleSuggestedQuestionClick}
+            suggestedQuestions={suggestedQuestions} {/* Adicionado */}
+            onSuggestedQuestionClick={handleSuggestedQuestionClick} {/* Adicionado */}
           />
           <ScoreDisplay
             correctExercisesCount={correctExercisesCount}
