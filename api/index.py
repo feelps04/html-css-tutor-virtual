@@ -6,6 +6,7 @@ import google.generativeai as genai
 import traceback
 import uuid # Importa a biblioteca uuid para gerar IDs de sessão
 import datetime # Para timestamps no log de feedback
+from google.api_core import exceptions # Importa as exceções da API Core
 
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
@@ -21,8 +22,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GOOGLE_API_KEY:
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
-        gemini_model = genai.GenerativeModel('gemini-pro')
-        print("Modelo Gemini-pro carregado com sucesso.")
+        # Alterado o modelo para gemini-1.5-flash-latest
+        gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+        print("Modelo Gemini-1.5-flash-latest carregado com sucesso.")
     except Exception as e:
         print(f"Erro ao configurar a API ou carregar o modelo Gemini: {e}")
         gemini_model = None
@@ -99,9 +101,6 @@ LEARNING_TOPICS = {
     }
 }
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({"message": "API esta funcionando!"}), 200
 
 @app.route('/start-session', methods=['POST'])
 def start_session():
@@ -115,13 +114,13 @@ def start_session():
     session_current_topic[session_id] = "html_intro" # Tópico padrão
     session_exercise_scores[session_id] = {'correct': 0, 'total': 0}
 
-    print(f"Nova sessao iniciada: {session_id} para {user_name} ({user_email})")
+    print(f"Nova sessão iniciada: {session_id} para {user_name} ({user_email})")
     return jsonify({"sessionId": session_id, "currentTopic": "html_intro", "currentMode": "iniciante"})
 
 @app.route('/chat', methods=['POST'])
 def chat():
     if not GOOGLE_API_KEY or not gemini_model:
-        return jsonify({"error": "Servico Gemini nao configurado ou inicializado. Verifique sua API Key e logs do backend."}), 500
+        return jsonify({"error": "Serviço Gemini não configurado ou inicializado. Verifique sua API Key e logs do backend."}), 500
 
     data = request.json
     user_message = data.get('message')
@@ -130,7 +129,7 @@ def chat():
     current_mode = data.get('currentMode')
 
     if not session_id or session_id not in session_histories:
-        return jsonify({"error": "Sessao invalida ou nao iniciada."}), 400
+        return jsonify({"error": "Sessão inválida ou não iniciada."}), 400
 
     if not user_message:
         return jsonify({"error": "Mensagem vazia."}), 400
@@ -140,32 +139,32 @@ def chat():
     session_modes[session_id] = current_mode
 
     history = session_histories[session_id]
-    topic_name = LEARNING_TOPICS.get(current_topic_key, {}).get("name", "topico desconhecido")
+    topic_name = LEARNING_TOPICS.get(current_topic_key, {}).get("name", "tópico desconhecido")
 
     # Construção da prompt com base no modo e tópico
     if current_mode == "iniciante":
         prompt_prefix = (
-            f"Voce e um tutor de HTML e CSS muito paciente e didatico para iniciantes. "
+            f"Você é um tutor de HTML e CSS muito paciente e didático para iniciantes. "
             f"Explique os conceitos de forma simples, com exemplos claros e analogias. "
-            f"Foque no topico '{topic_name}'. "
-            f"Sempre ofereca um pequeno exercicio pratico ao final de cada explicacao longa. "
-            f"Responda de forma concisa e direta, mas sempre completa para o nivel iniciante. "
-            f"Mantenha um tom amigavel e encorajador."
+            f"Foque no tópico '{topic_name}'. "
+            f"Sempre ofereça um pequeno exercício prático ao final de cada explicação longa. "
+            f"Responda de forma concisa e direta, mas sempre completa para o nível iniciante. "
+            f"Mantenha um tom amigável e encorajador."
         )
     elif current_mode == "intermediario":
         prompt_prefix = (
-            f"Voce e um tutor de HTML e CSS para nivel intermediario. "
-            f"Explique os conceitos com mais profundidade, incluindo melhores praticas e otimizacoes. "
-            f"Foque no topico '{topic_name}'. "
-            f"Inclua desafios de codigo e cenarios de uso reais. "
-            f"Estimule a experimentacao e a resolucao de problemas."
+            f"Você é um tutor de HTML e CSS para nível intermediário. "
+            f"Explique os conceitos com mais profundidade, incluindo melhores práticas e otimizações. "
+            f"Foque no tópico '{topic_name}'. "
+            f"Inclua desafios de código e cenários de uso reais. "
+            f"Estimule a experimentação e a resolução de problemas."
         )
     else: # avancado
         prompt_prefix = (
-            f"Voce e um tutor de HTML e CSS para nivel avancado. "
-            f"Aborde os topicos com detalhes tecnicos, discussoes sobre performance, "
-            f"compatibilidade de navegadores e padroes da industria. "
-            f"Foque no topico '{topic_name}'. "
+            f"Você é um tutor de HTML e CSS para nível avançado. "
+            f"Aborde os tópicos com detalhes técnicos, discussões sobre performance, "
+            f"compatibilidade de navegadores e padrões da indústria. "
+            f"Foque no tópico '{topic_name}'. "
             f"Apresente problemas complexos para o utilizador resolver e discuta arquiteturas. "
             f"Seja desafiador e proporcione insights aprofundados."
         )
@@ -183,7 +182,7 @@ def chat():
         session_histories[session_id] = history
 
         # Determinar se a última mensagem do tutor é um exercício
-        is_exercise = "exercicio" in ai_response_text.lower() or "desafio" in ai_response_text.lower()
+        is_exercise = "exercício" in ai_response_text.lower() or "desafio" in ai_response_text.lower()
 
         return jsonify({
             "response": ai_response_text,
@@ -192,12 +191,17 @@ def chat():
         })
     except genai.types.BlockedPromptException as e:
         block_reason = e.response.prompt_feedback.block_reason.name if e.response.prompt_feedback.block_reason else "Desconhecido"
-        print(f"Sua pergunta foi bloqueada pela API do Gemini. Razao: {block_reason}")
-        tutor_reply = f"Sua pergunta foi bloqueada por razoes de seguranca: {block_reason}. Por favor, tente reformular."
+        print(f"Sua pergunta foi bloqueada pela API do Gemini. Razão: {block_reason}")
+        tutor_reply = f"Sua pergunta foi bloqueada por razões de segurança: {block_reason}. Por favor, tente reformular."
         return jsonify({"reply": tutor_reply, "sessionId": session_id}), 400
-    except genai.types.ClientError as e:
-        print(f"Erro da API do Gemini (ClientError): {e}")
-        traceback.print_exc() # Imprime o stack trace para depuração
+    # Captura exceções mais genéricas ou específicas da API Core
+    except exceptions.NotFound as e:
+        print(f"Erro da API do Gemini (NotFound): {e}")
+        traceback.print_exc()
+        return jsonify({"error": f"Erro da API do Gemini: Modelo não encontrado ou não suportado. Detalhes: {str(e)}", "sessionId": session_id}), 500
+    except exceptions.GoogleAPICallError as e:
+        print(f"Erro da API do Gemini (GoogleAPICallError): {e}")
+        traceback.print_exc()
         return jsonify({"error": f"Erro da API do Gemini: {str(e)}", "sessionId": session_id}), 500
     except Exception as e:
         print(f"Erro inesperado no backend: {e}")
@@ -242,7 +246,7 @@ def exercise_evaluation():
     is_correct = data.get('isCorrect')
 
     if not session_id or session_id not in session_exercise_scores:
-        return jsonify({"error": "Sessao invalida ou nao iniciada."}), 400
+        return jsonify({"error": "Sessão inválida ou não iniciada."}), 400
 
     scores = session_exercise_scores[session_id]
     scores['total'] += 1
@@ -250,7 +254,7 @@ def exercise_evaluation():
         scores['correct'] += 1
 
     session_exercise_scores[session_id] = scores
-    print(f"Avaliacao de exercicio para sessao {session_id}: Correctos={scores['correct']}, Total={scores['total']}")
+    print(f"Avaliação de exercício para sessão {session_id}: Correctos={scores['correct']}, Total={scores['total']}")
     return jsonify({"status": "success", "scores": scores})
 
 @app.route('/get-scores', methods=['GET'])
@@ -260,4 +264,5 @@ def get_scores():
         return jsonify({"correct": 0, "total": 0})
     return jsonify(session_exercise_scores[session_id])
 
-
+if __name__ == '__main__':
+    app.run(debug=True)
