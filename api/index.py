@@ -23,7 +23,7 @@ if GOOGLE_API_KEY:
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
         # Alterado o modelo para gemini-1.5-flash-latest
-        gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest') 
+        gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
         print("Modelo Gemini-1.5-flash-latest carregado com sucesso.")
     except Exception as e:
         print(f"Erro ao configurar a API ou carregar o modelo Gemini: {e}")
@@ -101,21 +101,33 @@ LEARNING_TOPICS = {
     }
 }
 
+# --- NOVO: Manipulador de erro genérico para Flask ---
+@app.errorhandler(500)
+def internal_server_error(e):
+    # Imprime o traceback completo no terminal do backend para depuração
+    traceback.print_exc()
+    return jsonify(error="Internal Server Error", message=str(e)), 500
 
 @app.route('/start-session', methods=['POST'])
 def start_session():
-    data = request.json
-    user_name = data.get('userName')
-    user_email = data.get('userEmail')
-    session_id = str(uuid.uuid4()) # Gera um UUID único para a sessão
+    try: # Adicionado try-except para capturar erros específicos da rota
+        data = request.json
+        user_name = data.get('userName')
+        user_email = data.get('userEmail')
+        session_id = str(uuid.uuid4()) # Gera um UUID único para a sessão
 
-    session_histories[session_id] = []
-    session_modes[session_id] = "iniciante" # Modo padrão
-    session_current_topic[session_id] = "html_intro" # Tópico padrão
-    session_exercise_scores[session_id] = {'correct': 0, 'total': 0}
+        session_histories[session_id] = []
+        session_modes[session_id] = "iniciante" # Modo padrão
+        session_current_topic[session_id] = "html_intro" # Tópico padrão
+        session_exercise_scores[session_id] = {'correct': 0, 'total': 0}
 
-    print(f"Nova sessão iniciada: {session_id} para {user_name} ({user_email})")
-    return jsonify({"sessionId": session_id, "currentTopic": "html_intro", "currentMode": "iniciante"})
+        print(f"Nova sessão iniciada: {session_id} para {user_name} ({user_email})")
+        return jsonify({"sessionId": session_id, "currentTopic": "html_intro", "currentMode": "iniciante"})
+    except Exception as e:
+        print(f"Erro na rota /start-session: {e}")
+        traceback.print_exc() # Imprime o traceback completo
+        return jsonify({"error": "Erro interno ao iniciar a sessão."}), 500
+
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -210,8 +222,13 @@ def chat():
 
 @app.route('/get-learning-topics', methods=['GET'])
 def get_learning_topics():
-    # Retorna a lista de tópicos e suas descrições
-    return jsonify(LEARNING_TOPICS)
+    try: # Adicionado try-except para capturar erros específicos da rota
+        # Retorna a lista de tópicos e suas descrições
+        return jsonify(LEARNING_TOPICS)
+    except Exception as e:
+        print(f"Erro na rota /get-learning-topics: {e}")
+        traceback.print_exc() # Imprime o traceback completo
+        return jsonify({"error": "Erro interno ao buscar tópicos de aprendizado."}), 500
 
 @app.route('/feedback', methods=['POST'])
 def receive_feedback():
@@ -220,7 +237,7 @@ def receive_feedback():
     feedback_type = data.get('feedbackType') # 'like' ou 'dislike'
     message_text = data.get('messageText') # Texto da mensagem avaliada
     session_id = data.get('sessionId') # Pega o ID da sessão para o log
-    
+
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     feedback_entry = (
         f"[{timestamp}] Session ID: {session_id}, "
@@ -228,7 +245,7 @@ def receive_feedback():
         f"Feedback: {feedback_type}, "
         "Message: \"" + message_text.replace("\n", " ").strip() + "\"\n" # LINHA CORRIGIDA
     )
-    
+
     # --- SALVA O FEEDBACK EM UM ARQUIVO DE LOG ---
     try:
         with open("feedback.log", "a", encoding="utf-8") as f:
@@ -241,27 +258,38 @@ def receive_feedback():
 
 @app.route('/exercise-evaluation', methods=['POST'])
 def exercise_evaluation():
-    data = request.json
-    session_id = data.get('sessionId')
-    is_correct = data.get('isCorrect')
+    try: # Adicionado try-except para capturar erros específicos da rota
+        data = request.json
+        session_id = data.get('sessionId')
+        is_correct = data.get('isCorrect')
 
-    if not session_id or session_id not in session_exercise_scores:
-        return jsonify({"error": "Sessão inválida ou não iniciada."}), 400
+        if not session_id or session_id not in session_exercise_scores:
+            return jsonify({"error": "Sessão inválida ou não iniciada."}), 400
 
-    scores = session_exercise_scores[session_id]
-    scores['total'] += 1
-    if is_correct:
-        scores['correct'] += 1
+        scores = session_exercise_scores[session_id]
+        scores['total'] += 1
+        if is_correct:
+            scores['correct'] += 1
 
-    session_exercise_scores[session_id] = scores
-    print(f"Avaliação de exercício para sessão {session_id}: Correctos={scores['correct']}, Total={scores['total']}")
-    return jsonify({"status": "success", "scores": scores})
+        session_exercise_scores[session_id] = scores
+        print(f"Avaliação de exercício para sessão {session_id}: Correctos={scores['correct']}, Total={scores['total']}")
+        return jsonify({"status": "success", "scores": scores})
+    except Exception as e:
+        print(f"Erro na rota /exercise-evaluation: {e}")
+        traceback.print_exc()
+        return jsonify({"error": "Erro interno ao avaliar exercício."}), 500
 
 @app.route('/get-scores', methods=['GET'])
 def get_scores():
-    session_id = request.args.get('sessionId')
-    if not session_id or session_id not in session_exercise_scores:
-        return jsonify({"correct": 0, "total": 0})
-    return jsonify(session_exercise_scores[session_id])
+    try: # Adicionado try-except para capturar erros específicos da rota
+        session_id = request.args.get('sessionId')
+        if not session_id or session_id not in session_exercise_scores:
+            return jsonify({"correct": 0, "total": 0})
+        return jsonify(session_exercise_scores[session_id])
+    except Exception as e:
+        print(f"Erro na rota /get-scores: {e}")
+        traceback.print_exc()
+        return jsonify({"error": "Erro interno ao buscar pontuações."}), 500
 
-
+if __name__ == '__main__':
+    app.run(debug=True, port=5000) # Adicione debug=True e a porta 5000
