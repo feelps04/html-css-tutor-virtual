@@ -1,38 +1,52 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteImagemin from 'vite-plugin-imagemin';
-import { visualizer } from 'rollup-plugin-visualizer';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
-export default defineConfig({
-  plugins: [
+// Function to asynchronously create the plugin array
+async function createPlugins() {
+  const plugins = [
     react(),
-    // Adicionar o plugin visualizer para analisar o tamanho do bundle
-    process.env.ANALYZE === 'true' && visualizer({
-      filename: './dist/stats.html',
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
-    }),
-    viteImagemin({
-      gifsicle: {
+  ];
+  
+  // Only import and add visualizer when ANALYZE is true
+  if (process.env.ANALYZE === 'true') {
+    const { visualizer } = await import('rollup-plugin-visualizer');
+    plugins.push(
+      visualizer({
+        filename: './dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      })
+    );
+  }
+  
+  // Add image optimizer
+  plugins.push(
+    ViteImageOptimizer({
+      png: {
+        // OptiPNG options
+        optimizationLevel: 7,
+        // PNGQuant options
+        quality: 75, // Changed from array to integer (0-100)
+        speed: 4,
+      },
+      jpeg: {
+        // MozJPEG options
+        quality: 60,
+      },
+      gif: {
+        // GIFSicle options
         optimizationLevel: 7,
         interlaced: false,
       },
-      optipng: {
-        optimizationLevel: 7,
-      },
-      mozjpeg: {
-        quality: 60,
-      },
-      pngquant: {
-        quality: [0.7, 0.8],
-        speed: 4,
-      },
-      svgo: {
+      svg: {
+        // SVGO options
         plugins: [
           {
             name: 'removeViewBox',
+            active: true,
           },
           {
             name: 'removeEmptyAttrs',
@@ -40,8 +54,16 @@ export default defineConfig({
           },
         ],
       },
-    }),
-  ],
+      // Enable logging for debugging
+      logger: 'console',
+    })
+  );
+  
+  return plugins;
+}
+
+export default defineConfig(async () => ({
+  plugins: await createPlugins(),
   server: {
     port: 3000, // Set the development server port to 3000
     proxy: {
@@ -212,4 +234,4 @@ export default defineConfig({
     },
   },
   base: '/'
-});
+}));
