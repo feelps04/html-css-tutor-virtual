@@ -4,10 +4,11 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-              "config": {
-                "maxLambdaSize": "50mb",
-                "runtime": "python3.9"
-              }
+      "config": {
+        "maxLambdaSize": "50mb",
+        "runtime": "python3.9",
+        "includeFiles": ["api/learning_topics.json"]
+      }
     },
     {
       "src": "package.json",
@@ -20,13 +21,27 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/index.py"
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/$1"
+      "dest": "/index.html"
     }
   ],
   "installCommand": "pip install -r api/requirements.txt && npm install",
-  "buildCommand": "npm run vercel-build"
+  "buildCommand": "npm run vercel-build",
+  "env": {
+    "PYTHONPATH": "."
+  }
 }
