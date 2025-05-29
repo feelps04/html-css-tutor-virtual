@@ -1,5 +1,6 @@
-Flask
-Flask-CORS
-python-dotenv
-requests
-google-generativeai
+Flask==2.2.3
+Flask-CORS==3.0.10
+python-dotenv==1.0.0
+requests==2.31.0
+google-generativeai==0.2.1
+uuid==1.30

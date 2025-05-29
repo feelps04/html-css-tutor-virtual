@@ -254,11 +254,11 @@ const CodeBlock = ({ inline, className, children }) => {
         <button 
           onClick={handleCopyCode} 
           className="copy-code-button flex items-center justify-center rounded-md p-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 ease-in-out shadow-sm border border-gray-200 dark:border-gray-700"
-          aria-label="Copy code"
-          title="Copy code"
+          aria-label="Copiar código"
+          title="Copiar código"
         >
           {copied ? <FiCheck className="text-green-500" /> : <FiCopy />}
-          <span className="ml-1 hidden sm:inline">{copied ? 'Copied!' : 'Copy'}</span>
+          <span className="ml-1 hidden sm:inline">{copied ? 'Copiado!' : 'Copiar'}</span>
         </button>
       </div>
       

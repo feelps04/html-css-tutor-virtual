@@ -1,6 +1,43 @@
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, Component } from 'react';
 import './App.css';
 import './styles/global.css'; // Seus estilos globais (incluindo variáveis de tema)
+import './styles/responsive-enhancements.css'; // Importa melhorias responsivas adicionais
+import meuAvatar from './assets/img/meu_avatarr.png'; // Importing avatar image
+
+// ErrorBoundary para capturar erros de componentes
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Erro capturado:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-container p-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg m-4 flex flex-col items-center justify-center">
+          <h2 className="text-xl font-bold mb-2">Algo deu errado</h2>
+          <p className="mb-4">Tente recarregar a página ou contate o suporte se o problema persistir.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Recarregar
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Lazy load components
 const ChatHeader = React.lazy(() => import('./components/ChatHeader'));
@@ -10,21 +47,89 @@ const ScoreDisplay = React.lazy(() => import('./components/ScoreDisplay'));
 const LearningPath = React.lazy(() => import('./components/LearningPath'));
 const Home = React.lazy(() => import('./components/home'));
 
-// Simple loading component
-const Loading = () => (
-  <div className="loading-spinner">
-    <div className="spinner"></div>
-    <p>Carregando...</p>
+// Simple loading component com melhorias de responsividade
+const Loading = ({ message = "Carregando..." }) => (
+  <div className="loading-spinner flex flex-col items-center justify-center h-screen w-full p-4 bg-white dark:bg-gray-800">
+    <div className="spinner mb-4"></div>
+    <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 text-center">{message}</p>
   </div>
 );
 
+// Componente para Suspense com mensagens específicas
+const LoadingWrapper = ({ children, message }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<Loading message={message} />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
+);
+
+// Hook para detectar tamanho da tela
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: undefined,
+    height: undefined,
+    isMobile: false,
+  });
+  
+  useEffect(() => {
+    function handleResize() {
+      const width = window.innerWidth;
+      setWindowSize({
+        width,
+        height: window.innerHeight,
+        isMobile: width < 640, // Breakpoint SM do Tailwind
+      });
+    }
+    
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Chamada inicial
+    
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  
+  return windowSize;
+}
+
+// Função para limpar completamente o localStorage e sessionStorage
+function clearAllStorage() {
+  console.log("Limpando todo o storage...");
+  // Limpar localStorage
+  localStorage.removeItem('sessionId');
+  localStorage.removeItem('currentTopic');
+  localStorage.removeItem('currentMode');
+  localStorage.removeItem('userName');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('correctExercisesCount');
+  localStorage.removeItem('totalExercisesAttempted');
+  
+  // Limpar sessionStorage
+  sessionStorage.removeItem('chatMessages');
+  
+  console.log("Storage limpo com sucesso!");
+}
+
 function App() {
+  // Detectar tamanho da tela para otimizações específicas de dispositivo
+  const { isMobile } = useWindowSize();
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentTopic, setCurrentTopic] = useState('html_intro');
   const [currentMode, setCurrentMode] = useState('iniciante');
+  // Check if reset parameter is in URL
+  const [shouldResetSession] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('reset') === 'true';
+  });
+  
+  // DEBUG: Sempre inicia como não autenticado para depuração
+  const [debugMode] = useState(() => {
+    // Verificar se estamos em modo de depuração (force=true na URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('force') === 'true';
+  });
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
@@ -35,9 +140,14 @@ function App() {
   const [learningTopics, setLearningTopics] = useState({});
   // Estado inicial para mostrar a tela de login.
   // A trilha de aprendizado será mostrada após o login.
-  const [showLearningPath, setShowLearningPath] = useState(false); 
+  const [showLearningPath, setShowLearningPath] = useState(false);
+  // Estado para controlar se o usuário já fez login (visualizou a tela Home)
+  // MODIFICADO: Sempre começar como não autenticado (false)
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  // Estado para forçar iniciar pela página inicial
+  const [forceStartWithHome, setForceStartWithHome] = useState(true); // MODIFICADO: Sempre começar com a Home
   const [correctExercisesCount, setCorrectExercisesCount] = useState(0);
   const [totalExercisesAttempted, setTotalExercisesAttempted] = useState(0);
   const [lastMessageIsExercise, setLastMessageIsExercise] = useState(false);
@@ -106,12 +216,41 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Efeito para limpar o localStorage/sessionStorage na inicialização
+  useEffect(() => {
+    console.log("Inicializando App, estado userAuthenticated:", userAuthenticated);
+    console.log("Modo de depuração:", debugMode ? "ATIVADO" : "DESATIVADO");
+    
+    // Se estamos em modo de depuração, sempre limpa o storage
+    if (debugMode) {
+      console.log("Modo de depuração ativado, limpando storage...");
+      clearAllStorage();
+      // Alerta para confirmar que estamos em modo de depuração
+      alert("App iniciado em modo de depuração. Storage limpo!");
+    }
+  }, [debugMode]); // Executa apenas uma vez na inicialização
+
   // Efeito para carregar o histórico e a sessão se existir
   useEffect(() => {
-    // Apenas carrega o tema salvo, se houver.
+    console.log("Verificando se devemos carregar sessão anterior...");
+    
+    // Sempre carrega o tema salvo, independente de reset
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       setTheme(storedTheme);
+    }
+
+    // MODIFICADO: Adicionado modo de depuração para forçar reset
+    // Se estiver no modo de reset ou forceStartWithHome ou debugMode, não carrega sessão anterior
+    if (shouldResetSession || forceStartWithHome || debugMode) {
+      console.log("Reset ativado! Não carregando sessão anterior.");
+      
+      // Limpa a URL para não ficar com o parâmetro reset=true
+      if ((shouldResetSession || debugMode) && window.history.pushState) {
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+      }
+      return; // Não carrega dados da sessão anterior
     }
 
     const storedSessionId = localStorage.getItem('sessionId');
@@ -125,7 +264,10 @@ function App() {
 
     if (storedSessionId) {
       setSessionId(storedSessionId);
-      setShowLearningPath(false); // Se há sessão, pula a tela de login
+      // Definir que o usuário está autenticado se existir dados salvos
+      if (storedUserName && storedUserEmail) {
+        setUserAuthenticated(true);
+      }
       if (storedTopic) setCurrentTopic(storedTopic);
       if (storedMode) setCurrentMode(storedMode);
       if (storedMessages) setMessages(JSON.parse(storedMessages));
@@ -147,7 +289,7 @@ function App() {
         })
         .catch(error => console.error("Erro ao reativar sessão:", error));
     }
-  }, []); // Dependência vazia para rodar apenas uma vez na montagem
+  }, [shouldResetSession, forceStartWithHome]); // Dependências incluem flags de reset
 
   const fetchScores = async (currentSessionId) => {
     try {
@@ -178,13 +320,26 @@ function App() {
 
   }, [sessionId, currentTopic, currentMode, messages, userName, userEmail, correctExercisesCount, totalExercisesAttempted]);
 
-  const handleStartJourney = async (name, email) => {
+  // Adiciona classe 'chat-open' ao body quando estiver na tela de chat
+  useEffect(() => {
+    if (!showLearningPath) {
+      document.body.classList.add('chat-open');
+    } else {
+      document.body.classList.remove('chat-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('chat-open');
+    };
+  }, [showLearningPath]);
+
+  const handleStartJourney = async (userData) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/start-session', { // ALTERADO: Caminho relativo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userName: name, userEmail: email }),
+        body: JSON.stringify({ userName: userData.name, userEmail: userData.email }),
       });
 
       if (!response.ok) {
@@ -195,8 +350,9 @@ function App() {
       setSessionId(data.sessionId);
       setCurrentTopic(data.currentTopic);
       setCurrentMode(data.currentMode);
-      setUserName(name);
-      setUserEmail(email);
+      setUserName(userData.name);
+      setUserEmail(userData.email);
+      setUserAuthenticated(true); // Marca o usuário como autenticado
       setShowLearningPath(true); // Vai para a trilha após o login
       setMessages([]); // Limpa mensagens para nova sessão
       setCorrectExercisesCount(0);
@@ -323,6 +479,27 @@ function App() {
     setShowLearningPath(true);
   };
 
+  // Function to reset session and go back to Home
+  const handleLogout = () => {
+    console.log("Realizando logout e limpando dados...");
+    setUserAuthenticated(false);
+    setShowLearningPath(false);
+    setMessages([]);
+    setForceStartWithHome(true); // Force start with home page on next load
+    
+    // Usar a função global para limpar todo o storage
+    clearAllStorage();
+  };
+
+  // Function to reset the session via URL and reload
+  const resetAndReload = () => {
+    console.log("Redirecionando para reset via URL...");
+    // Primeiro limpa todo o storage
+    clearAllStorage();
+    // Redirect to the same page with force=true parameter (modo de depuração)
+    window.location.href = window.location.pathname + '?force=true';
+  };
+
   const handleTopicSelect = (topicKey) => {
     setCurrentTopic(topicKey);
     setShowLearningPath(false); // Esconde a trilha para mostrar o chat
@@ -368,60 +545,106 @@ function App() {
     sendUserMessageToTutor(question); // Envia a pergunta sugerida diretamente
   };
 
-  // Se não houver sessionId e userName, exibe a tela inicial (Home)
-  if (!sessionId && !userName) {
+  // MODIFICADO: Adicionado log para depuração
+  console.log("Renderizando App, userAuthenticated =", userAuthenticated);
+  
+  // Sempre mostra a tela Home se o usuário não estiver autenticado
+  if (!userAuthenticated) {
+    console.log("Mostrando tela Home (usuário não autenticado)");
     return (
-      <Suspense fallback={<Loading />}>
-        <Home onStartJourney={handleStartJourney} />
-      </Suspense>
+      <div>
+        {/* Botão de reset mesmo na tela inicial */}
+        <button 
+          onClick={resetAndReload}
+          className="fixed top-2 right-2 z-50 bg-red-500 dark:bg-red-600 text-white text-xs p-2 rounded-md shadow-md hover:bg-red-600 dark:hover:bg-red-700"
+          title="Forçar reinício da aplicação"
+        >
+          Forçar Reset
+        </button>
+        
+        <LoadingWrapper message="Preparando sua jornada de aprendizado...">
+          <Home onStartJourney={handleStartJourney} />
+        </LoadingWrapper>
+      </div>
     );
   }
 
+  
   return (
-    <div className={`app-container`}>
+    <div className="app-container" role="application" aria-label="Tutor Virtual de Lógica de Programação">
+      {/* Botão de reset mais visível no topo da tela */}
+      <button 
+        onClick={resetAndReload}
+        className="fixed top-2 right-2 z-50 bg-red-500 dark:bg-red-600 text-white text-xs p-2 rounded-md shadow-md hover:bg-red-600 dark:hover:bg-red-700 touch-optimized"
+        title="Voltar para a tela inicial"
+      >
+        Reiniciar Aplicação
+      </button>
       {showLearningPath ? (
-        <Suspense fallback={<Loading />}>
+        <LoadingWrapper message="Carregando trilha de aprendizado...">
           <LearningPath
             learningTopics={learningTopics}
             onTopicSelect={handleTopicSelect}
             currentTopic={currentTopic}
+            isMobile={isMobile}
+            userName={userName}
+            userAvatar={meuAvatar}
           />
-        </Suspense>
+        </LoadingWrapper>
       ) : (
-        <div className="chat-container">
-          <Suspense fallback={<Loading />}>
-            <ChatHeader
-              currentTopic={currentTopic}
-              learningTopics={learningTopics}
-              handleTopicChange={handleTopicChange}
-              currentMode={currentMode}
-              handleModeChange={handleModeChange}
-              theme={theme}
-              toggleTheme={toggleTheme}
-              onBackToPath={handleBackToPath}
-              isLoading={isLoading}
-            />
-            <MessagesDisplay
-              messages={messages}
-              isLoading={isLoading}
-              handleFeedback={handleFeedback}
-              lastMessageIsExercise={lastMessageIsExercise}
-              hasEvaluatedLastExercise={hasEvaluatedLastExercise}
-              handleExerciseEvaluation={handleExerciseEvaluation}
-            />
-            <MessageInput
-              inputMessage={inputMessage}
-              setInputMessage={setInputMessage}
-              handleSendMessage={handleSendMessage}
-              isLoading={isLoading}
-              suggestedQuestions={suggestedQuestions} /* Adicionado */
-              onSuggestedQuestionClick={handleSuggestedQuestionClick} /* Adicionado */
-            />
-            <ScoreDisplay
-              correctExercisesCount={correctExercisesCount}
-              totalExercisesAttempted={totalExercisesAttempted}
-            />
-          </Suspense>
+        <div className="chat-container" role="main">
+          <ErrorBoundary>
+            <Suspense fallback={<div className="h-14 xs:h-16 bg-gray-100 dark:bg-gray-800 animate-pulse"></div>}>
+              <div className="flex-shrink-0 chat-header">
+                <ChatHeader
+                  learningTopics={learningTopics}
+                  handleTopicChange={handleTopicChange}
+                  currentMode={currentMode}
+                  handleModeChange={handleModeChange}
+                  theme={theme}
+                  toggleTheme={toggleTheme}
+                  onBackToPath={handleBackToPath}
+                  onLogout={handleLogout}
+                  isLoading={isLoading}
+                />
+              </div>
+            </Suspense>
+            
+            <ErrorBoundary>
+              <Suspense fallback={<div className="flex-grow bg-gray-50 dark:bg-gray-900 animate-pulse flex items-center justify-center"><p>Carregando mensagens...</p></div>}>
+                <MessagesDisplay
+                  messages={messages}
+                  isLoading={isLoading}
+                  handleFeedback={handleFeedback}
+                  lastMessageIsExercise={lastMessageIsExercise}
+                  hasEvaluatedLastExercise={hasEvaluatedLastExercise}
+                  handleExerciseEvaluation={handleExerciseEvaluation}
+                />
+              </Suspense>
+            </ErrorBoundary>
+            
+            <ErrorBoundary>
+              <Suspense fallback={<div className="h-20 bg-gray-100 dark:bg-gray-800 animate-pulse"></div>}>
+                <MessageInput
+                  inputMessage={inputMessage}
+                  setInputMessage={setInputMessage}
+                  handleSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  suggestedQuestions={suggestedQuestions}
+                  onSuggestedQuestionClick={handleSuggestedQuestionClick}
+                />
+              </Suspense>
+            </ErrorBoundary>
+            
+            <ErrorBoundary>
+              <Suspense fallback={<div className="h-8 bg-gray-100 dark:bg-gray-800 animate-pulse"></div>}>
+                <ScoreDisplay
+                  correctExercisesCount={correctExercisesCount}
+                  totalExercisesAttempted={totalExercisesAttempted}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          </ErrorBoundary>
         </div>
       )}
     </div>

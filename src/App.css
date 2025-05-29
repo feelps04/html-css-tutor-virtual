@@ -3,10 +3,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos Gerais */
+/* Estilos Gerais Otimizados para Responsividade */
+html {
+  @apply text-base;
+  -webkit-tap-highlight-color: transparent; /* Remove highlight on tap for iOS */
+  touch-action: manipulation; /* Improve responsiveness on touch devices */
+  -webkit-text-size-adjust: 100%; /* Prevent automatic text size adjustment */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+/* Ajuste de tamanho base da fonte para dispositivos menores */
+@media (max-width: 640px) {
+  html {
+    @apply text-sm;
+  }
+}
+
 body {
   /* Usando classes Tailwind para margem, fonte, flexbox, alinhamento, altura mínima, e transições de cor */
   @apply m-0 font-sans flex justify-center items-center min-h-screen transition-colors duration-300;
+  /* Otimizado para garantir que o body não exceda a largura da tela e que o conteúdo não transborde horizontalmente */
+  @apply w-screen overflow-x-hidden overscroll-none;
+  /* Melhorar performance de scrolling em dispositivos móveis */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Styles for loading spinner */
@@ -53,17 +74,46 @@ body.dark-theme {
 
 .app-container {
   /* max-w-6xl é 1200px (Tailwind padrão) */
-  @apply w-full max-w-6xl flex flex-col items-center p-5 box-border;
+  @apply w-full max-w-6xl flex flex-col items-center p-2 sm:p-5 box-border;
 }
 
 h1, h2 {
   /* text-inherit para herdar a cor do texto do pai */
-  @apply text-inherit mb-5 text-center;
+  @apply text-inherit mb-3 sm:mb-5 text-center;
 }
 
-button, select {
-  /* Removido font-inherit, que não é uma classe Tailwind */
-  @apply rounded-lg;
+h1 {
+  @apply text-xl sm:text-2xl md:text-3xl;
+}
+
+h2 {
+  @apply text-lg sm:text-xl md:text-2xl;
+}
+
+/* Melhorias para elementos interativos */
+button, 
+select, 
+a[role="button"], 
+input[type="submit"], 
+input[type="button"] {
+  @apply rounded-lg transition-all duration-200;
+  /* Garantir área de toque adequada em dispositivos móveis */
+  @apply min-h-[36px] sm:min-h-[44px];
+  /* Feedback visual para ações de toque */
+  @apply active:scale-[0.98] hover:scale-[1.02];
+}
+
+/* Melhorias para entradas de texto */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  @apply rounded-lg transition-all duration-200;
+  /* Prevenir zoom automático em iOS */
+  font-size: 16px;
+  /* Garantir altura tocável adequada */
+  @apply min-h-[36px] sm:min-h-[44px];
 }
 
 /* ------------------------------------- */
@@ -75,11 +125,11 @@ button, select {
 /* Estilos para LearningPath.jsx */
 /* ------------------------------------- */
 .learning-path-container {
-  @apply w-full max-w-4xl p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 relative overflow-hidden;
+  @apply w-full max-w-4xl p-3 sm:p-6 bg-white dark:bg-gray-800 rounded-lg shadow-xl my-4 sm:my-8 relative overflow-hidden;
 }
 
 .learning-path-container h2 {
-  @apply text-3xl font-bold text-center mb-8 text-blue-700 dark:text-blue-300;
+  @apply text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-8 text-blue-700 dark:text-blue-300;
 }
 
 .path-line {
@@ -92,9 +142,9 @@ button, select {
 }
 
 .topic-card {
-  @apply relative bg-gray-50 dark:bg-gray-900 p-6 rounded-lg shadow-md mb-8 cursor-pointer transition-all duration-300 ease-in-out border-2 border-transparent; /* Alterado dark:bg-gray-700 para dark:bg-gray-900 */
-  width: 90%; /* Ajuste para caber na tela */
-  max-width: 400px; /* Limite a largura para melhor leitura */
+  @apply relative bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 rounded-lg shadow-md mb-4 sm:mb-8 cursor-pointer transition-all duration-300 ease-in-out border-2 border-transparent;
+  @apply w-full; /* Garante que o card ocupe toda a largura disponível do pai */
+  @apply sm:max-w-sm md:max-w-md; /* Limita a largura em telas maiores */
 }
 
 .topic-card:hover {
@@ -102,15 +152,15 @@ button, select {
 }
 
 .topic-card.active {
-  @apply border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900 shadow-xl; /* Alterado dark:bg-blue-900/30 para dark:bg-blue-900 */
+  @apply border-blue-600 dark:border-blue-400 bg-blue-100 dark:bg-blue-900 shadow-xl;
 }
 
 .topic-card h3 {
-  @apply text-xl font-semibold mb-2 text-blue-800 dark:text-blue-200;
+  @apply text-lg sm:text-xl font-semibold mb-1 sm:mb-2 text-blue-800 dark:text-blue-200;
 }
 
 .topic-card p {
-  @apply text-gray-700 dark:text-gray-100 text-sm; /* Alterado para dark:text-gray-100 para melhor contraste */
+  @apply text-gray-700 dark:text-gray-100 text-sm;
 }
 
 .topic-card.left-aligned {
@@ -122,13 +172,172 @@ button, select {
 }
 
 .current-topic-indicator {
-  @apply absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full;
+  @apply absolute top-1 sm:top-2 right-1 sm:right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full;
 }
 
 
 /* Estilos existentes (mantidos para outros componentes) */
+/* Adicionando estilos para chat-container para melhorar responsividade */
+.chat-container {
+  @apply w-full h-screen flex flex-col overflow-hidden;
+}
+
+/* Estilos para MessagesDisplay */
+.messages-display {
+  @apply flex-grow overflow-y-auto p-2 sm:p-4 space-y-3 bg-gray-50 dark:bg-gray-800;
+}
+
+.message {
+  /* Alterado para w-full para garantir que a bolha da mensagem ocupe toda a largura disponível */
+  /* Removido max-w-md para dar mais flexibilidade em telas maiores, confiando no max-w-none do prose */
+  @apply p-3 sm:p-4 rounded-lg w-full;
+  /* Garante que o texto dentro da bolha da mensagem quebre palavras longas */
+  word-break: break-word;
+  overflow-wrap: break-word; /* Compatibilidade para navegadores */
+}
+
+/* Adicionado para garantir que o conteúdo de código e pré-formatado seja responsivo */
+.message pre {
+  @apply overflow-x-auto p-2 rounded-md my-2 text-sm;
+  background-color: var(--code-background);
+  color: var(--code-text-color);
+  max-width: 100%; /* Garante que o pre ocupe a largura máxima disponível dentro da mensagem */
+  box-sizing: border-box; /* Inclui padding e border no cálculo da largura */
+  white-space: pre-wrap; /* Permite quebras de linha em espaços e quebras de linha explícitas */
+  word-break: break-word; /* Força a quebra de palavras longas dentro do bloco de código */
+}
+
+.message code {
+  /* Garante que o texto dentro do code quebra palavras e não causa overflow horizontal */
+  @apply whitespace-pre-wrap break-words;
+}
+
+/* Adicionado para garantir que parágrafos e listas dentro das mensagens sejam responsivos */
+.message p,
+.message ul,
+.message ol {
+  @apply max-w-full overflow-hidden; /* Garante que o texto não transborde */
+  overflow-wrap: break-word; /* Quebra palavras longas apenas se necessário para evitar overflow */
+  white-space: normal; /* Garante que o texto normal quebre linhas */
+  word-break: break-word; /* Força a quebra de palavras longas para evitar overflow */
+}
+
+/* Adicionado para garantir que imagens dentro das mensagens sejam responsivas */
+.message img {
+  @apply max-w-full h-auto; /* Garante que a imagem se ajuste à largura do contêiner */
+}
+
+.message.user {
+  @apply bg-blue-100 dark:bg-blue-900 text-gray-800 dark:text-gray-100 ml-auto;
+}
+
+.message.tutor {
+  @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 mr-auto;
+}
+
+.message .timestamp {
+  @apply block text-xs text-gray-500 dark:text-gray-400 mt-1;
+}
+
+.feedback-buttons {
+  @apply flex gap-2 mt-2 justify-end;
+}
+
+.feedback-buttons button {
+  @apply p-1 sm:p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
+}
+
+.feedback-confirmation {
+  @apply block text-xs italic text-gray-500 dark:text-gray-400 mt-1;
+}
+
+.exercise-evaluation-buttons {
+  @apply flex flex-wrap gap-2 mt-2;
+}
+
+.message.loading {
+  @apply bg-gray-100 dark:bg-gray-700 p-2 text-gray-500 dark:text-gray-400;
+}
+
+/* Estilos para SuggestedQuestions */
+.suggested-questions-container {
+  @apply w-full overflow-hidden py-2 mb-2 border-b border-gray-200 dark:border-gray-700;
+}
+
+.sugested-questions-wrapper {
+  @apply relative;
+  touch-action: pan-x;
+}
+
+/* Adicione estilos específicos para telas muito pequenas */
+@media (max-width: 375px) {
+  .suggested-questions-container {
+    @apply py-1 mb-1;
+  }
+  
+  /* Ajustar botões para telas muito pequenas */
+  .sugested-questions-wrapper button {
+    @apply text-xs py-1 px-2 min-w-[70px];
+  }
+}
+
+/* Defina uma classe para telas extra-pequenas */
+.xs\:inline-block {
+  @media (min-width: 480px) {
+    display: inline-block;
+  }
+}
+
+/* Defina uma classe personalizada para telas extra small */
+.xs\:py-1\.5 {
+  @media (min-width: 480px) {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+}
+
+.xs\:px-3 {
+  @media (min-width: 480px) {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+.xs\:gap-2 {
+  @media (min-width: 480px) {
+    gap: 0.5rem;
+  }
+}
+
+.xs\:min-w-\[100px\] {
+  @media (min-width: 480px) {
+    min-width: 100px;
+  }
+}
+
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.suggested-questions {
+  @apply flex gap-1.5 pb-1;
+  scrollbar-width: thin;
+}
+
 .suggested-question-button {
-  @apply flex-shrink-0 min-w-0 md:min-w-[150px] whitespace-nowrap text-nowrap py-2 px-4 rounded-full text-sm bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300; /* Corrigido duration-250 para duration-300 */
+  @apply flex-shrink-0 min-w-0 whitespace-nowrap py-1 px-2 
+         rounded-full text-xs bg-blue-500 text-white 
+         hover:bg-blue-600 active:bg-blue-700
+         transition-colors duration-200 touch-scale;
+}
+
+/* Ajustes específicos para dispositivos móveis */
+@media (max-width: 600px) {
+  .suggested-question-button {
+    @apply min-h-[36px] min-w-[80px] flex items-center justify-center;
+  }
 }
 
 .suggested-question-button:disabled {
@@ -156,27 +365,238 @@ button, select {
 }
 
 .message-input-form {
-  @apply p-4 border-t border-gray-200 flex gap-2 bg-gray-50 dark:border-gray-700 dark:bg-gray-900;
+  @apply p-2 sm:p-4 border-t border-gray-200 flex gap-1 sm:gap-2 bg-gray-50 dark:border-gray-700 dark:bg-gray-900;
 }
 
 .message-input-form input {
-  @apply flex-grow p-3 border border-gray-300 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200;
+  @apply flex-grow p-2 sm:p-3 border border-gray-300 rounded-lg bg-white text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200;
 }
 
 .message-input-form button {
-  @apply py-3 px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors duration-300;
+  @apply py-2 sm:py-3 px-3 sm:px-5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base rounded-lg transition-colors duration-300;
 }
 
 /* Adições para o ChatHeader */
+.chat-header {
+  @apply p-2 sm:p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10;
+}
+
+.chat-header h1 {
+  @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 sm:mb-4 text-blue-700 dark:text-blue-300;
+}
+
 .chat-header .controls {
-  @apply flex flex-wrap justify-center items-center gap-4; /* Adiciona flexbox e gap para espaçamento */
+  @apply flex flex-wrap justify-center items-center gap-2 sm:gap-4;
 }
 
 .chat-header .controls select {
-  @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500;
+  @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 p-1 sm:p-2 text-xs sm:text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[100px] sm:min-w-[150px];
 }
 
 /* Estilo para as opções dentro do select no modo escuro */
 .chat-header .controls select option {
   @apply bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200;
+}
+
+/* Botões no cabeçalho */
+.chat-header button {
+  @apply py-1 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors;
+}
+
+.theme-toggle-button, .back-to-path-button {
+  @apply font-medium;
+}
+
+/* Estilos responsivos para Home */
+.home-container {
+  @apply p-4 sm:p-8 mx-auto mt-4 sm:mt-8;
+  /* Adicionado para garantir que ocupe a largura total em telas pequenas e que o conteúdo não transborde */
+  @apply w-full overflow-x-hidden;
+}
+
+/* Media queries otimizados para ajustes específicos de responsividade */
+
+/* Smartphones pequenos (até 375px) */
+@media (max-width: 375px) {
+  .app-container {
+    @apply p-1;
+  }
+  
+  h1 {
+    @apply text-lg;
+  }
+  
+  h2 {
+    @apply text-base;
+  }
+  
+  /* Ajustar tamanho das bolhas de mensagem para telas muito pequenas */
+  .message {
+    @apply p-2 max-w-[95%];
+  }
+  
+  /* Tornar botões mais compactos em telas muito pequenas */
+  button, .button {
+    @apply py-1 px-2 text-xs;
+  }
+  
+  /* Ajustar espaçamento em containers */
+  .p-3, .p-4 {
+    @apply p-2;
+  }
+}
+
+/* Smartphones (até 640px) */
+@media (max-width: 640px) {
+  /* Ajustes para telas pequenas (smartphones) */
+  .topic-card.left-aligned, .topic-card.right-aligned {
+    @apply mx-auto; /* Centralizar cards em telas pequenas */
+  }
+  
+  /* Reorganizar controles de cabeçalho para melhor uso de espaço */
+  .chat-header .controls {
+    @apply flex-col;
+  }
+  
+  .chat-header .controls > * {
+    @apply w-full mb-2;
+  }
+  
+  /* Fazer botões de avaliação empilharem verticalmente */
+  .exercise-evaluation-buttons {
+    @apply flex-col;
+  }
+  
+  .exercise-evaluation-buttons button {
+    @apply w-full;
+  }
+  
+  /* Ajustar tamanho de texto para telas pequenas */
+  .prose {
+    @apply text-sm;
+  }
+  
+  /* Garantir que áreas tocáveis sejam adequadas */
+  button, a, select, input[type="button"], input[type="submit"] {
+    @apply min-h-[44px];
+  }
+}
+
+/* Tablets (641px - 768px) */
+@media (min-width: 641px) and (max-width: 768px) {
+  /* Ajustes específicos para tablets */
+  .app-container {
+    @apply max-w-2xl;
+  }
+  
+  /* Melhorar experiência de scroll em tablets */
+  .messages-display {
+    @apply py-4 px-3;
+  }
+  
+  /* Ajustar tamanho das bolhas de mensagem */
+  .message {
+    @apply max-w-[80%];
+  }
+}
+
+/* Estilos para scroll em dispositivos móveis */
+@media (max-width: 768px) {
+  .suggested-questions {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    scroll-snap-type: x mandatory; /* Melhorar navegação horizontal */
+  }
+  
+  .suggested-questions::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
+  
+  /* Garantir que áreas scrolláveis tenham boa performance */
+  .overflow-auto, .overflow-y-auto, .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Melhorar performance de renderização em dispositivos móveis */
+  .animate-fadeIn, .transition-all {
+    will-change: transform, opacity;
+  }
+  
+  /* Otimizar inputs para tela sensível ao toque */
+  input, textarea, select {
+    font-size: 16px; /* Prevenir zoom automático em iOS */
+  }
+}
+
+/* Ajustes para telas grandes */
+@media (min-width: 1024px) {
+  .app-container {
+    @apply max-w-6xl;
+  }
+  
+  /* Melhorar uso de espaço em telas grandes */
+  .message {
+    @apply max-w-[60%];
+  }
+}
+
+@media (min-width: 1280px) {
+  .app-container {
+    @apply max-w-7xl;
+  }
+  
+  /* Adicionar mais espaço de respiração em telas muito grandes */
+  .p-3, .p-4 {
+    @apply p-5;
+  }
+  
+  /* Permitir conteúdo mais amplo em telas grandes */
+  .prose {
+    @apply max-w-4xl;
+  }
+}
+
+/* Utilitários para animações e transições responsivas */
+.touch-scale {
+  @apply transition-transform duration-200;
+}
+
+.touch-scale:active {
+  @apply scale-95;
+}
+
+/* Útil para esconder elementos visualmente mas manter acessíveis para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Utilitários para esconder scrollbars mas manter funcionalidade */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+/* Utilitários para melhorar performance de rolagem */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Utilitário para prevenir zoom em iOS */
+.no-zoom {
+  font-size: 16px;
 }

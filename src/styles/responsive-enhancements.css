@@ -1,0 +1,180 @@
+/* responsive-enhancements.css - Additional responsive improvements for the chat interface */
+
+/* ------ 1. Improved height management for chat container ------ */
+
+/* Use dynamic viewport heights for better mobile experience */
+.app-container {
+  height: 100vh; /* Fallback */
+  height: 100dvh; /* Dynamic viewport height - better for mobile */
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Make chat container fill available space */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+/* Make message display area fill available space and scroll properly */
+.messages-display-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ------ 2. Better touch handling for message display area ------ */
+
+/* Improve scrolling performance on touch devices */
+.messages-display {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+/* Improve touch interactions */
+.touch-optimized {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ------ 3. Optimizations for portrait orientation ------ */
+
+/* Mobile portrait mode optimizations */
+@media (max-width: 640px) and (orientation: portrait) {
+  /* More compact header for more content space */
+  .chat-header {
+    padding: 0.5rem !important;
+  }
+  
+  /* Ensure message input stays visible above virtual keyboard */
+  .message-input-wrapper {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Adjust size and spacing of message bubbles */
+  .message {
+    padding: 0.625rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Mobile landscape mode optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  .chat-container {
+    padding-bottom: 0;
+  }
+  
+  .chat-header {
+    padding: 0.375rem !important;
+  }
+  
+  .messages-display {
+    padding: 0.375rem !important;
+  }
+}
+
+/* ------ 4. Improvements for suggested questions area ------ */
+
+/* Enhanced suggested questions container */
+.suggested-questions-container {
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  overflow: visible;
+}
+
+/* Ensure suggested questions scroll smoothly on all devices */
+.sugested-questions-wrapper {
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+/* Handle very small screens */
+@media (max-width: 359px) {
+  .suggested-question-button {
+    min-width: 60px !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .suggested-questions-container {
+    padding: 0.25rem 0;
+    margin-bottom: 0.25rem;
+  }
+}
+
+/* ------ 5. Enhanced spacing between components ------ */
+
+/* Adjust vertical spacing based on screen height */
+@media (max-height: 700px) {
+  .chat-container > * {
+    margin-bottom: 0.25rem;
+  }
+  
+  .message {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Extra breathing room on larger screens */
+@media (min-width: 1024px) {
+  .chat-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .messages-display {
+    padding: 1rem !important;
+  }
+  
+  .message {
+    margin-bottom: 1rem !important;
+  }
+}
+
+/* ------ Additional optimizations ------ */
+
+/* Ensure proper sizing for interactive elements */
+button, 
+.button,
+input[type="text"],
+input[type="submit"] {
+  min-height: 44px; /* Recommended minimum for touch targets */
+}
+
+/* Prevent text size adjustment */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent scrolling on body when chat is open */
+body.chat-open {
+  overflow: hidden;
+}
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 640px) {
+  input[type="text"] {
+    font-size: 16px !important;
+  }
+}
+
+/* Add dynamic safe area support for notched devices */
+.app-container {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
