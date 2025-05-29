@@ -108,7 +108,7 @@ def internal_server_error(e):
     traceback.print_exc()
     return jsonify(error="Internal Server Error", message=str(e)), 500
 
-@app.route('/start-session', methods=['POST'])
+@app.route('/api/start-session', methods=['POST'])
 def start_session():
     try: # Adicionado try-except para capturar erros específicos da rota
         data = request.json
@@ -124,12 +124,12 @@ def start_session():
         print(f"Nova sessão iniciada: {session_id} para {user_name} ({user_email})")
         return jsonify({"sessionId": session_id, "currentTopic": "html_intro", "currentMode": "iniciante"})
     except Exception as e:
-        print(f"Erro na rota /start-session: {e}")
+        print(f"Erro na rota /api/start-session: {e}")
         traceback.print_exc() # Imprime o traceback completo
         return jsonify({"error": "Erro interno ao iniciar a sessão."}), 500
 
 
-@app.route('/chat', methods=['POST'])
+@app.route('/api/chat', methods=['POST'])
 def chat():
     if not GOOGLE_API_KEY or not gemini_model:
         return jsonify({"error": "Serviço Gemini não configurado ou inicializado. Verifique sua API Key e logs do backend."}), 500
@@ -220,17 +220,17 @@ def chat():
         traceback.print_exc()
         return jsonify({"error": f"Erro interno do servidor: {str(e)}", "sessionId": session_id}), 500
 
-@app.route('/get-learning-topics', methods=['GET'])
+@app.route('/api/get-learning-topics', methods=['GET'])
 def get_learning_topics():
     try: # Adicionado try-except para capturar erros específicos da rota
         # Retorna a lista de tópicos e suas descrições
         return jsonify(LEARNING_TOPICS)
     except Exception as e:
-        print(f"Erro na rota /get-learning-topics: {e}")
+        print(f"Erro na rota /api/get-learning-topics: {e}")
         traceback.print_exc() # Imprime o traceback completo
         return jsonify({"error": "Erro interno ao buscar tópicos de aprendizado."}), 500
 
-@app.route('/feedback', methods=['POST'])
+@app.route('/api/feedback', methods=['POST'])
 def receive_feedback():
     data = request.json
     message_id = data.get('messageId')
@@ -256,7 +256,7 @@ def receive_feedback():
         print(f"Erro ao escrever feedback no arquivo: {e}")
         return jsonify({"status": "error", "message": "Erro ao registrar feedback.", "error": str(e)}), 500
 
-@app.route('/exercise-evaluation', methods=['POST'])
+@app.route('/api/exercise-evaluation', methods=['POST'])
 def exercise_evaluation():
     try: # Adicionado try-except para capturar erros específicos da rota
         data = request.json
@@ -275,11 +275,11 @@ def exercise_evaluation():
         print(f"Avaliação de exercício para sessão {session_id}: Correctos={scores['correct']}, Total={scores['total']}")
         return jsonify({"status": "success", "scores": scores})
     except Exception as e:
-        print(f"Erro na rota /exercise-evaluation: {e}")
+        print(f"Erro na rota /api/exercise-evaluation: {e}")
         traceback.print_exc()
         return jsonify({"error": "Erro interno ao avaliar exercício."}), 500
 
-@app.route('/get-scores', methods=['GET'])
+@app.route('/api/get-scores', methods=['GET'])
 def get_scores():
     try: # Adicionado try-except para capturar erros específicos da rota
         session_id = request.args.get('sessionId')
@@ -287,7 +287,7 @@ def get_scores():
             return jsonify({"correct": 0, "total": 0})
         return jsonify(session_exercise_scores[session_id])
     except Exception as e:
-        print(f"Erro na rota /get-scores: {e}")
+        print(f"Erro na rota /api/get-scores: {e}")
         traceback.print_exc()
         return jsonify({"error": "Erro interno ao buscar pontuações."}), 500
 
