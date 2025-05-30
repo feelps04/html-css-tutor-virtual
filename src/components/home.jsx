@@ -58,6 +58,54 @@ const Home = ({ onStartJourney }) => {
       e.preventDefault();
     }
   };
+  // Adicione estilos CSS para feedback visual durante a navegação
+  useEffect(() => {
+    // Adicionar estilos globais para feedback visual
+    const style = document.createElement('style');
+    style.textContent = `
+      .key-nav-active {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+        transition: box-shadow 0.15s ease-in-out !important;
+      }
+      
+      @keyframes focusPulse {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+        70% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+      }
+      
+      /* Animação para indicador de navegação por teclado */
+      @keyframes pulseIndicator {
+        0% { transform: scale(1) translateX(-50%); }
+        50% { transform: scale(1.1) translateX(-45%); }
+        100% { transform: scale(1) translateX(-50%); }
+      }
+      
+      @keyframes stepChange {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      .step-change {
+        animation: stepChange 0.3s ease-out;
+      }
+      
+      input:focus, button:focus {
+        animation: focusPulse 0.8s ease-out;
+      }
+      
+      #keyboard-nav-indicator.visible {
+        opacity: 1 !important;
+        animation: pulseIndicator 0.5s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   // Efeito para adicionar event listeners para prevenir scroll indesejado
   useEffect(() => {
@@ -85,6 +133,106 @@ const Home = ({ onStartJourney }) => {
     return () => clearTimeout(focusTimer);
   }, [currentStep]);
 
+  // Efeito adicional para previnir saltos de etapas e garantir ordem sequencial
+  useEffect(() => {
+    // Função para garantir que o foco esteja no campo correto da etapa atual
+    const forceCorrectFocus = () => {
+      if (currentStep === 1 && nameInputRef.current) {
+        nameInputRef.current.focus();
+      } else if (currentStep === 2 && emailInputRef.current) {
+        emailInputRef.current.focus();
+      } else if (currentStep === 3 && passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      }
+    };
+
+    // Aplicar foco imediatamente após a mudança de etapa
+    forceCorrectFocus();
+    
+    // Verificação de segurança para evitar pular etapas
+    const handleFocusChange = () => {
+      // Se estiver na etapa 1, garantir que apenas elementos da etapa 1 estejam acessíveis
+      if (currentStep === 1) {
+        if (document.activeElement === emailInputRef.current || 
+            document.activeElement === nextButtonRef.current ||
+            document.activeElement === passwordInputRef.current || 
+            document.activeElement === submitButtonRef.current) {
+          forceCorrectFocus();
+        }
+      }
+      // Se estiver na etapa 2, garantir que apenas elementos da etapa 2 estejam acessíveis
+      else if (currentStep === 2) {
+        if (document.activeElement === passwordInputRef.current || 
+            document.activeElement === submitButtonRef.current) {
+          forceCorrectFocus();
+        }
+      }
+      // Se estiver na etapa 3, garantir que apenas elementos da etapa 3 estejam acessíveis
+      else if (currentStep === 3) {
+        if (document.activeElement === nameInputRef.current || 
+            document.activeElement === continueButtonRef.current ||
+            document.activeElement === emailInputRef.current || 
+            document.activeElement === nextButtonRef.current) {
+          forceCorrectFocus();
+        }
+      }
+    };
+
+    // Verificar e corrigir o foco a cada 150ms
+    const intervalId = setInterval(handleFocusChange, 150);
+    
+    // Adicionar ouvinte de eventos para teclas para garantir navegação consistente
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'Tab') {
+        // Captura o Tab para impedir navegação fora do formulário
+        setTimeout(handleFocusChange, 0);
+      }
+    };
+    
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [currentStep]);
+
+  // Função super simplificada para mudar de etapa imediatamente sem validações ou animações
+  const simpleStepChange = (newStep) => {
+    // Garantir que o passo está dentro dos limites permitidos (1-3)
+    if (newStep < 1 || newStep > 3) return;
+    
+    // Atualizar o estado
+    setCurrentStep(newStep);
+    
+    // Mostrar feedback visual
+    const indicator = document.getElementById('keyboard-nav-indicator');
+    if (indicator) {
+      indicator.classList.add('visible');
+      indicator.textContent = `Etapa ${newStep} de 3`;
+      setTimeout(() => indicator.classList.remove('visible'), 1500);
+    }
+    
+    // Aplicar foco ao campo apropriado imediatamente
+    setTimeout(() => {
+      try {
+        // Forçar foco no campo correto para garantir a navegação sequencial
+        if (newStep === 1 && nameInputRef.current) {
+          nameInputRef.current.focus();
+          console.log('Focando campo nome');
+        } else if (newStep === 2 && emailInputRef.current) {
+          emailInputRef.current.focus();
+          console.log('Focando campo email');
+        } else if (newStep === 3 && passwordInputRef.current) {
+          passwordInputRef.current.focus();
+          console.log('Focando campo senha');
+        }
+      } catch (e) {
+        console.error("Erro ao focar campo:", e);
+      }
+    }, 50);
+  };
+  
   // Função para navegar para a próxima etapa
   const goToNextStep = () => {
     // Validar o campo atual antes de prosseguir
@@ -108,6 +256,12 @@ const Home = ({ onStartJourney }) => {
       setTimeout(() => {
         setCurrentStep(2);
         setFormTransitioning(false);
+        // Garantir que o foco vá para o campo de email
+        setTimeout(() => {
+          if (emailInputRef.current) {
+            emailInputRef.current.focus();
+          }
+        }, 50);
       }, 300);
     } else if (currentStep === 2) {
       // Validação do email
@@ -129,6 +283,12 @@ const Home = ({ onStartJourney }) => {
       setTimeout(() => {
         setCurrentStep(3);
         setFormTransitioning(false);
+        // Garantir que o foco vá para o campo de senha
+        setTimeout(() => {
+          if (passwordInputRef.current) {
+            passwordInputRef.current.focus();
+          }
+        }, 50);
       }, 300);
     }
   };
@@ -144,6 +304,12 @@ const Home = ({ onStartJourney }) => {
       setTimeout(() => {
         setCurrentStep(1);
         setFormTransitioning(false);
+        // Garantir que o foco vá para o campo de nome
+        setTimeout(() => {
+          if (nameInputRef.current) {
+            nameInputRef.current.focus();
+          }
+        }, 50);
       }, 300);
     } else if (currentStep === 3) {
       // Animação
@@ -154,57 +320,50 @@ const Home = ({ onStartJourney }) => {
       setTimeout(() => {
         setCurrentStep(2);
         setFormTransitioning(false);
+        // Garantir que o foco vá para o campo de email
+        setTimeout(() => {
+          if (emailInputRef.current) {
+            emailInputRef.current.focus();
+          }
+        }, 50);
       }, 300);
     }
   };
 
-  // Manipulação de navegação por teclado para melhorar acessibilidade
-  const handleKeyDown = (e, inputType) => {
+  // Função ultra simplificada para navegação com teclas de seta
+  const handleKeyDown = (e) => {
     // Previne comportamento padrão de scroll para setas
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Sempre impede o comportamento padrão
       e.preventDefault();
+      e.stopPropagation();
       
-      // Gerencia o foco com base nas teclas de seta
+      // Mostrar feedback visual
+      const indicator = document.getElementById('keyboard-nav-indicator');
+      if (indicator) {
+        indicator.classList.add('visible');
+        indicator.textContent = e.key === 'ArrowDown' ? 'Navegando para baixo' : 'Navegando para cima';
+        setTimeout(() => indicator.classList.remove('visible'), 800);
+      }
+      
+      // Navegação ultra simplificada baseada apenas na direção e no passo atual
       if (e.key === 'ArrowDown') {
-        if (inputType === 'name' && continueButtonRef.current) {
-          e.preventDefault();
-          continueButtonRef.current.focus();
-        } else if (inputType === 'email' && nextButtonRef.current) {
-          e.preventDefault();
-          nextButtonRef.current.focus();
-        } else if (inputType === 'password' && submitButtonRef.current) {
-          e.preventDefault();
-          submitButtonRef.current.focus();
+        // Seta para baixo: avança na sequência 1->2->3
+        if (currentStep === 1) {
+          simpleStepChange(2); // De 1 para 2
+        } else if (currentStep === 2) {
+          simpleStepChange(3); // De 2 para 3
         }
+        // No passo 3, não faz nada quando pressiona para baixo
       } else if (e.key === 'ArrowUp') {
-        if (inputType === 'continueBttn' && nameInputRef.current) {
-          e.preventDefault();
-          nameInputRef.current.focus();
-        } else if (inputType === 'nextBttn' && emailInputRef.current) {
-          e.preventDefault();
-          emailInputRef.current.focus();
-        } else if (inputType === 'submitBttn' && passwordInputRef.current) {
-          e.preventDefault();
-          passwordInputRef.current.focus();
+        // Seta para cima: volta na sequência 3->2->1
+        if (currentStep === 3) {
+          simpleStepChange(2); // De 3 para 2
+        } else if (currentStep === 2) {
+          simpleStepChange(1); // De 2 para 1
         }
+        // No passo 1, não faz nada quando pressiona para cima
       }
-    }
-    
-    // Enter para navegar entre etapas
-    if (e.key === 'Enter') {
-      if ((currentStep === 1 && inputType === 'name' && !e.shiftKey) || 
-          (currentStep === 1 && inputType === 'continueBttn') ||
-          (currentStep === 2 && inputType === 'email' && !e.shiftKey) ||
-          (currentStep === 2 && inputType === 'nextBttn')) {
-        e.preventDefault();
-        goToNextStep();
-      }
-    }
-    
-    // Tab + Shift para voltar (no email)
-    if (e.key === 'Tab' && e.shiftKey && currentStep === 2 && inputType === 'email') {
-      e.preventDefault();
-      goToPrevStep();
     }
   };
 
@@ -265,6 +424,9 @@ const Home = ({ onStartJourney }) => {
   return (
     <div 
       className="home-container flex flex-col items-center justify-center p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-300 bg-white dark:bg-gray-800 shadow-gray-300 dark:shadow-gray-900"
+      style={{
+        '--step-transition-time': '300ms'
+      }}
       // Prevenir eventos de scrolling na div principal
       onWheel={(e) => {
         // Impede o scroll da página quando estiver interagindo com o formulário
@@ -306,16 +468,29 @@ const Home = ({ onStartJourney }) => {
       <form 
         ref={formRef}
         onSubmit={handleSubmit} 
-        className="w-full flex flex-col gap-4" 
+        className="w-full flex flex-col gap-4 transition-all duration-150 relative" 
         aria-live="polite"
-        // Impedir comportamento padrão de form submit
+        // Capturar eventos de tecla no nível do formulário para garantir a navegação consistente
+        tabIndex="-1" // Permite que o formulário receba foco sem interromper a navegação normal
         onKeyDown={(e) => {
+          // Impedir submit com Enter em campos de texto
           if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
             e.preventDefault();
           }
+          
+          // Lidar com navegação de setas no nível do formulário
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            // Chamar o handler sem debouncing para resposta mais rápida
+            handleKeyDown(e);
+          }
         }}
       >
-        {/* Container para animação de etapas */}
+        {/* Indicador de navegação por teclado */}
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs py-1 px-3 rounded-full opacity-0 transition-opacity duration-200 font-bold" 
+             id="keyboard-nav-indicator"
+             aria-live="polite">
+          Use ↑↓ para navegar
+/* Container para animação de etapas */}
         <div className="relative w-full overflow-hidden">
           {/* Etapa 1: Nome */}
           <div 
@@ -344,7 +519,7 @@ const Home = ({ onStartJourney }) => {
                     setNameError(''); // Limpa erro ao digitar no nome
                   }
                 }}
-                onKeyDown={(e) => handleKeyDown(e, 'name')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 onBlur={() => {
                   if (userName.trim() === '') {
                     setNameError('O nome é obrigatório.');
@@ -373,7 +548,7 @@ const Home = ({ onStartJourney }) => {
                   preventScrollOnClick(e);
                   goToNextStep();
                 }}
-                onKeyDown={(e) => handleKeyDown(e, 'continueBttn')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 disabled={isSubmitting || formTransitioning}
                 className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 flex items-center justify-center ${
                   isSubmitting || formTransitioning
@@ -434,7 +609,7 @@ const Home = ({ onStartJourney }) => {
                     setEmailError(''); // Limpa erro ao digitar no email
                   }
                 }}
-                onKeyDown={(e) => handleKeyDown(e, 'email')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 onBlur={() => {
                   if (userEmail.trim() === '') {
                     setEmailError('O e-mail é obrigatório.');
@@ -463,7 +638,7 @@ const Home = ({ onStartJourney }) => {
                   preventScrollOnClick(e);
                   goToNextStep();
                 }}
-                onKeyDown={(e) => handleKeyDown(e, 'nextBttn')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 disabled={isSubmitting || formTransitioning}
                 className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 flex items-center justify-center ${
                   isSubmitting || formTransitioning
@@ -520,7 +695,7 @@ const Home = ({ onStartJourney }) => {
                     setPasswordError(''); // Limpa erro ao digitar a senha
                   }
                 }}
-                onKeyDown={(e) => handleKeyDown(e, 'password')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 onBlur={() => {
                   if (userPassword.trim() === '') {
                     setPasswordError('A senha é obrigatória.');
@@ -549,7 +724,7 @@ const Home = ({ onStartJourney }) => {
                 type="submit"
                 ref={submitButtonRef}
                 disabled={isSubmitting || formTransitioning}
-                onKeyDown={(e) => handleKeyDown(e, 'submitBttn')}
+                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
                 className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 ${
                   isSubmitting || formTransitioning
                     ? 'bg-blue-400 cursor-not-allowed' 
