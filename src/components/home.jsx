@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useEffect, useRef } from 'react';
+import React, { useState, lazy, Suspense, useEffect, useLayoutEffect, useRef } from 'react';
 // Dynamic import for icons
 const FaDiscord = lazy(() => import('react-icons/fa').then(module => ({
   default: module.FaDiscord
@@ -51,11 +51,140 @@ const Home = ({ onStartJourney }) => {
   const isValidPassword = (password) => {
     return password.length >= 6 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
   };
-  // Função para prevenir o comportamento padrão de scroll
-  const preventDefaultScroll = (e) => {
-    // Previne o comportamento padrão apenas para teclas de seta para cima/baixo
+  // Função direta para navegar para o próximo campo e aplicar foco
+  const directNextStep = () => {
+    if (currentStep < 3) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // Aplicar foco diretamente
+      setTimeout(() => {
+        if (nextStep === 2 && emailInputRef.current) {
+          emailInputRef.current.focus();
+        } else if (nextStep === 3 && passwordInputRef.current) {
+          passwordInputRef.current.focus();
+        }
+      }, 0);
+    }
+  };
+  
+  // Função direta para navegar para o campo anterior e aplicar foco
+  const directPrevStep = () => {
+    if (currentStep > 1) {
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      
+      // Aplicar foco diretamente
+      setTimeout(() => {
+        if (prevStep === 1 && nameInputRef.current) {
+          nameInputRef.current.focus();
+        } else if (prevStep === 2 && emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
+      }, 0);
+    }
+  };
+  
+  // Função para focar o próximo input com animação - para botões
+  const focusNextInput = () => {
+    // Animação
+    setAnimationDirection('forward');
+    setFormTransitioning(true);
+    
+    // Determinar a próxima etapa com base na etapa atual
+    const nextStep = currentStep < 3 ? currentStep + 1 : currentStep;
+    
+    // Aguardar a animação de saída antes de mudar a etapa
+    setTimeout(() => {
+      setCurrentStep(nextStep);
+      setFormTransitioning(false);
+      
+      // Garantir que o foco vá para o campo correto
+      setTimeout(() => {
+        if (nextStep === 2 && emailInputRef.current) {
+          emailInputRef.current.focus();
+          console.log('Focando email via botão');
+        } else if (nextStep === 3 && passwordInputRef.current) {
+          passwordInputRef.current.focus();
+          console.log('Focando senha via botão');
+        }
+      }, 50);
+    }, 300);
+  };
+  
+  // Função para focar o input anterior com animação - para botões
+  const focusPrevInput = () => {
+    // Animação
+    setAnimationDirection('backward');
+    setFormTransitioning(true);
+    
+    // Determinar a etapa anterior com base na etapa atual
+    const prevStep = currentStep > 1 ? currentStep - 1 : currentStep;
+    
+    // Aguardar a animação de saída antes de mudar a etapa
+    setTimeout(() => {
+      setCurrentStep(prevStep);
+      setFormTransitioning(false);
+      
+      // Garantir que o foco vá para o campo correto
+      setTimeout(() => {
+        if (prevStep === 1 && nameInputRef.current) {
+          nameInputRef.current.focus();
+          console.log('Focando nome via botão');
+        } else if (prevStep === 2 && emailInputRef.current) {
+          emailInputRef.current.focus();
+          console.log('Focando email via botão');
+        }
+      }, 50);
+    }, 300);
+  };
+  
+  // Função para navegação com teclas de seta - com foco direto
+  const handleArrowKeyNavigation = (e) => {
+    // Capturar apenas teclas de seta
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Impedir comportamento padrão imediatamente
       e.preventDefault();
+      e.stopPropagation();
+      
+      // Mostrar feedback visual para o usuário
+      const indicator = document.getElementById('keyboard-nav-indicator');
+      if (indicator) {
+        indicator.classList.add('visible');
+        indicator.textContent = e.key === 'ArrowDown' ? 'Navegando para baixo' : 'Navegando para cima';
+        setTimeout(() => indicator.classList.remove('visible'), 800);
+      }
+      
+      // Verificar qual elemento está atualmente focado
+      const activeElement = document.activeElement;
+      
+      // Navegar e aplicar foco diretamente com base no elemento ativo
+      if (e.key === 'ArrowDown') {
+        // Avançar para o próximo input (nome → email → senha)
+        if (activeElement === nameInputRef.current) {
+          setCurrentStep(2);
+          emailInputRef.current?.focus();
+          console.log('Navegando do nome para o email via seta');
+        } else if (activeElement === emailInputRef.current) {
+          setCurrentStep(3);
+          passwordInputRef.current?.focus();
+          console.log('Navegando do email para a senha via seta');
+        }
+      } else if (e.key === 'ArrowUp') {
+        // Voltar para o input anterior (senha → email → nome)
+        if (activeElement === passwordInputRef.current) {
+          setCurrentStep(2);
+          emailInputRef.current?.focus();
+          console.log('Navegando da senha para o email via seta');
+        } else if (activeElement === emailInputRef.current) {
+          setCurrentStep(1);
+          nameInputRef.current?.focus();
+          console.log('Navegando do email para o nome via seta');
+        }
+      }
+      
+      // Garantir que o evento não se propague
+      return false;
     }
   };
   // Adicione estilos CSS para feedback visual durante a navegação
@@ -107,131 +236,11 @@ const Home = ({ onStartJourney }) => {
     };
   }, []);
 
-  // Efeito para adicionar event listeners para prevenir scroll indesejado
-  useEffect(() => {
-    // Adiciona listeners globais para prevenir comportamento padrão de scroll
-    window.addEventListener('keydown', preventDefaultScroll, { passive: false });
-    
-    return () => {
-      window.removeEventListener('keydown', preventDefaultScroll);
-    };
-  }, []);
+  // Remover o useEffect de foco - agora o foco é gerenciado diretamente pelo handleArrowKeyNavigation
 
-  // Efeito para focar nos inputs corretos quando a etapa muda
-  useEffect(() => {
-    // Pequeno timeout para garantir que o foco seja aplicado após as animações
-    const focusTimer = setTimeout(() => {
-      if (currentStep === 1 && nameInputRef.current) {
-        nameInputRef.current.focus();
-      } else if (currentStep === 2 && emailInputRef.current) {
-        emailInputRef.current.focus();
-      } else if (currentStep === 3 && passwordInputRef.current) {
-        passwordInputRef.current.focus();
-      }
-    }, 350); // Um pouco mais que a duração da animação (300ms)
-    
-    return () => clearTimeout(focusTimer);
-  }, [currentStep]);
+  // Este useEffect foi removido pois é redundante
 
-  // Efeito adicional para previnir saltos de etapas e garantir ordem sequencial
-  useEffect(() => {
-    // Função para garantir que o foco esteja no campo correto da etapa atual
-    const forceCorrectFocus = () => {
-      if (currentStep === 1 && nameInputRef.current) {
-        nameInputRef.current.focus();
-      } else if (currentStep === 2 && emailInputRef.current) {
-        emailInputRef.current.focus();
-      } else if (currentStep === 3 && passwordInputRef.current) {
-        passwordInputRef.current.focus();
-      }
-    };
-
-    // Aplicar foco imediatamente após a mudança de etapa
-    forceCorrectFocus();
-    
-    // Verificação de segurança para evitar pular etapas
-    const handleFocusChange = () => {
-      // Se estiver na etapa 1, garantir que apenas elementos da etapa 1 estejam acessíveis
-      if (currentStep === 1) {
-        if (document.activeElement === emailInputRef.current || 
-            document.activeElement === nextButtonRef.current ||
-            document.activeElement === passwordInputRef.current || 
-            document.activeElement === submitButtonRef.current) {
-          forceCorrectFocus();
-        }
-      }
-      // Se estiver na etapa 2, garantir que apenas elementos da etapa 2 estejam acessíveis
-      else if (currentStep === 2) {
-        if (document.activeElement === passwordInputRef.current || 
-            document.activeElement === submitButtonRef.current) {
-          forceCorrectFocus();
-        }
-      }
-      // Se estiver na etapa 3, garantir que apenas elementos da etapa 3 estejam acessíveis
-      else if (currentStep === 3) {
-        if (document.activeElement === nameInputRef.current || 
-            document.activeElement === continueButtonRef.current ||
-            document.activeElement === emailInputRef.current || 
-            document.activeElement === nextButtonRef.current) {
-          forceCorrectFocus();
-        }
-      }
-    };
-
-    // Verificar e corrigir o foco a cada 150ms
-    const intervalId = setInterval(handleFocusChange, 150);
-    
-    // Adicionar ouvinte de eventos para teclas para garantir navegação consistente
-    const handleGlobalKeyDown = (e) => {
-      if (e.key === 'Tab') {
-        // Captura o Tab para impedir navegação fora do formulário
-        setTimeout(handleFocusChange, 0);
-      }
-    };
-    
-    window.addEventListener('keydown', handleGlobalKeyDown);
-    
-    return () => {
-      clearInterval(intervalId);
-      window.removeEventListener('keydown', handleGlobalKeyDown);
-    };
-  }, [currentStep]);
-
-  // Função super simplificada para mudar de etapa imediatamente sem validações ou animações
-  const simpleStepChange = (newStep) => {
-    // Garantir que o passo está dentro dos limites permitidos (1-3)
-    if (newStep < 1 || newStep > 3) return;
-    
-    // Atualizar o estado
-    setCurrentStep(newStep);
-    
-    // Mostrar feedback visual
-    const indicator = document.getElementById('keyboard-nav-indicator');
-    if (indicator) {
-      indicator.classList.add('visible');
-      indicator.textContent = `Etapa ${newStep} de 3`;
-      setTimeout(() => indicator.classList.remove('visible'), 1500);
-    }
-    
-    // Aplicar foco ao campo apropriado imediatamente
-    setTimeout(() => {
-      try {
-        // Forçar foco no campo correto para garantir a navegação sequencial
-        if (newStep === 1 && nameInputRef.current) {
-          nameInputRef.current.focus();
-          console.log('Focando campo nome');
-        } else if (newStep === 2 && emailInputRef.current) {
-          emailInputRef.current.focus();
-          console.log('Focando campo email');
-        } else if (newStep === 3 && passwordInputRef.current) {
-          passwordInputRef.current.focus();
-          console.log('Focando campo senha');
-        }
-      } catch (e) {
-        console.error("Erro ao focar campo:", e);
-      }
-    }, 50);
-  };
+  // As funções goToNextStep e goToPrevStep continuam para os botões de navegação
   
   // Função para navegar para a próxima etapa
   const goToNextStep = () => {
@@ -330,42 +339,7 @@ const Home = ({ onStartJourney }) => {
     }
   };
 
-  // Função ultra simplificada para navegação com teclas de seta
-  const handleKeyDown = (e) => {
-    // Previne comportamento padrão de scroll para setas
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      // Sempre impede o comportamento padrão
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Mostrar feedback visual
-      const indicator = document.getElementById('keyboard-nav-indicator');
-      if (indicator) {
-        indicator.classList.add('visible');
-        indicator.textContent = e.key === 'ArrowDown' ? 'Navegando para baixo' : 'Navegando para cima';
-        setTimeout(() => indicator.classList.remove('visible'), 800);
-      }
-      
-      // Navegação ultra simplificada baseada apenas na direção e no passo atual
-      if (e.key === 'ArrowDown') {
-        // Seta para baixo: avança na sequência 1->2->3
-        if (currentStep === 1) {
-          simpleStepChange(2); // De 1 para 2
-        } else if (currentStep === 2) {
-          simpleStepChange(3); // De 2 para 3
-        }
-        // No passo 3, não faz nada quando pressiona para baixo
-      } else if (e.key === 'ArrowUp') {
-        // Seta para cima: volta na sequência 3->2->1
-        if (currentStep === 3) {
-          simpleStepChange(2); // De 3 para 2
-        } else if (currentStep === 2) {
-          simpleStepChange(1); // De 2 para 1
-        }
-        // No passo 1, não faz nada quando pressiona para cima
-      }
-    }
-  };
+  // Removendo a função handleKeyDown duplicada, pois agora temos o handleArrowKeys centralizado
 
   // Impedir scrolling quando o usuário clicar nos botões
   const preventScrollOnClick = (e) => {
@@ -470,18 +444,19 @@ const Home = ({ onStartJourney }) => {
         onSubmit={handleSubmit} 
         className="w-full flex flex-col gap-4 transition-all duration-150 relative" 
         aria-live="polite"
-        // Capturar eventos de tecla no nível do formulário para garantir a navegação consistente
-        tabIndex="-1" // Permite que o formulário receba foco sem interromper a navegação normal
+        tabIndex="-1"
+        // Handler de teclado com prevenção garantida
         onKeyDown={(e) => {
-          // Impedir submit com Enter em campos de texto
-          if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
-            e.preventDefault();
-          }
-          
-          // Lidar com navegação de setas no nível do formulário
+          // Prevenir comportamento padrão para teclas de seta imediatamente
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            // Chamar o handler sem debouncing para resposta mais rápida
-            handleKeyDown(e);
+            e.preventDefault();
+            e.stopPropagation();
+            handleArrowKeyNavigation(e);
+            return false;
+          }
+          // Impedir envio do formulário com Enter em campos de texto
+          else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+            e.preventDefault();
           }
         }}
       >
@@ -490,7 +465,8 @@ const Home = ({ onStartJourney }) => {
              id="keyboard-nav-indicator"
              aria-live="polite">
           Use ↑↓ para navegar
-/* Container para animação de etapas */}
+        </div>
+        {/* Container para animação de etapas */}
         <div className="relative w-full overflow-hidden">
           {/* Etapa 1: Nome */}
           <div 
@@ -519,7 +495,7 @@ const Home = ({ onStartJourney }) => {
                     setNameError(''); // Limpa erro ao digitar no nome
                   }
                 }}
-                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
+                // Remover handler individual - usando apenas o handler global
                 onBlur={() => {
                   if (userName.trim() === '') {
                     setNameError('O nome é obrigatório.');
@@ -609,7 +585,7 @@ const Home = ({ onStartJourney }) => {
                     setEmailError(''); // Limpa erro ao digitar no email
                   }
                 }}
-                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
+                // Remover handler individual - usando apenas o handler global
                 onBlur={() => {
                   if (userEmail.trim() === '') {
                     setEmailError('O e-mail é obrigatório.');
@@ -695,7 +671,7 @@ const Home = ({ onStartJourney }) => {
                     setPasswordError(''); // Limpa erro ao digitar a senha
                   }
                 }}
-                // Não precisa de onKeyDown aqui - o tratamento é feito no nível do formulário
+                // Remover handler individual - usando apenas o handler global
                 onBlur={() => {
                   if (userPassword.trim() === '') {
                     setPasswordError('A senha é obrigatória.');
