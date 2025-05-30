@@ -502,19 +502,33 @@ function App() {
 
   const handleTopicSelect = (topicKey) => {
     setCurrentTopic(topicKey);
-    setShowLearningPath(false); // Esconde a trilha para mostrar o chat
-    setMessages([]); // Limpa as mensagens ao mudar de tópico
+    // Não esconde mais a trilha automaticamente, apenas atualiza o tópico selecionado
+    // setShowLearningPath(false); // Removido para manter o usuário na trilha
+    
+    // Limpa as mensagens ao mudar de tópico (será usado quando ir para o chat)
+    setMessages([]); 
     setLastMessageIsExercise(false); // Reseta o estado do exercício
     setHasEvaluatedLastExercise(false); // Reseta a avaliação do exercício
-
-    const topicName = learningTopics[topicKey]?.name || topicKey;
+  };
+  
+  // Nova função para iniciar o gerador de perguntas após seleção do tópico
+  const startQuestionGenerator = () => {
+    if (!currentTopic) {
+      // Se nenhum tópico foi selecionado, mostra um alerta
+      alert("Por favor, selecione um tópico da trilha antes de prosseguir.");
+      return;
+    }
+    
+    setShowLearningPath(false); // Agora sim esconde a trilha para mostrar o chat
+    
+    const topicName = learningTopics[currentTopic]?.name || currentTopic;
     // Gera uma pergunta para o usuário e a envia automaticamente
-    const suggested = generateSuggestedQuestions(topicKey, currentMode);
+    const suggested = generateSuggestedQuestions(currentTopic, currentMode);
     if (suggested.length > 0) {
       sendUserMessageToTutor(suggested[0]); // Envia a primeira pergunta sugerida automaticamente
     } else {
       // Se não houver sugestões, ainda envia uma mensagem inicial
-      sendUserMessageToTutor(`Olá! Estou pronto para aprender sobre "${topicName}".`);
+      sendUserMessageToTutor(`Olá! Estou pronto para aprender sobre \"${topicName}\".`);
     }
   };
 
@@ -589,6 +603,7 @@ function App() {
             isMobile={isMobile}
             userName={userName}
             userAvatar={meuAvatar}
+            onStartQuestionGenerator={startQuestionGenerator}
           />
         </LoadingWrapper>
       ) : (
