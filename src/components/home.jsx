@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useEffect } from 'react';
+import React, { useState, lazy, Suspense, useEffect, useRef } from 'react';
 // Dynamic import for icons
 const FaDiscord = lazy(() => import('react-icons/fa').then(module => ({
   default: module.FaDiscord
@@ -24,6 +24,13 @@ const Home = ({ onStartJourney }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1 = nome, 2 = email
   const [animationDirection, setAnimationDirection] = useState('forward'); // 'forward' ou 'backward'
   const [formTransitioning, setFormTransitioning] = useState(false);
+  
+  // Refs para os elementos do formulário
+  const formRef = useRef(null);
+  const nameInputRef = useRef(null);
+  const emailInputRef = useRef(null);
+  const continueButtonRef = useRef(null);
+  const submitButtonRef = useRef(null);
 
   // Validação de nome para não permitir números ou caracteres especiais
   const isValidName = (name) => {
@@ -35,13 +42,36 @@ const Home = ({ onStartJourney }) => {
   const isValidEmail = (email) => {
     return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
   };
+  // Função para prevenir o comportamento padrão de scroll
+  const preventDefaultScroll = (e) => {
+    // Previne o comportamento padrão apenas para teclas de seta para cima/baixo
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+    }
+  };
+
+  // Efeito para adicionar event listeners para prevenir scroll indesejado
+  useEffect(() => {
+    // Adiciona listeners globais para prevenir comportamento padrão de scroll
+    window.addEventListener('keydown', preventDefaultScroll, { passive: false });
+    
+    return () => {
+      window.removeEventListener('keydown', preventDefaultScroll);
+    };
+  }, []);
+
   // Efeito para focar nos inputs corretos quando a etapa muda
   useEffect(() => {
-    if (currentStep === 1) {
-      document.getElementById('name')?.focus();
-    } else if (currentStep === 2) {
-      document.getElementById('email')?.focus();
-    }
+    // Pequeno timeout para garantir que o foco seja aplicado após as animações
+    const focusTimer = setTimeout(() => {
+      if (currentStep === 1 && nameInputRef.current) {
+        nameInputRef.current.focus();
+      } else if (currentStep === 2 && emailInputRef.current) {
+        emailInputRef.current.focus();
+      }
+    }, 350); // Um pouco mais que a duração da animação (300ms)
+    
+    return () => clearTimeout(focusTimer);
   }, [currentStep]);
 
   // Função para navegar para a próxima etapa
@@ -86,17 +116,68 @@ const Home = ({ onStartJourney }) => {
     }
   };
 
-  // Funções de manipulação do teclado para acessibilidade
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && currentStep === 1 && !e.shiftKey) {
+  // Manipulação de navegação por teclado para melhorar acessibilidade
+  const handleKeyDown = (e, inputType) => {
+    // Previne comportamento padrão de scroll para setas
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault();
-      goToNextStep();
+      
+      // Gerencia o foco com base nas teclas de seta
+      if (e.key === 'ArrowDown') {
+        if (inputType === 'name' && continueButtonRef.current) {
+          e.preventDefault();
+          continueButtonRef.current.focus();
+        } else if (inputType === 'email' && submitButtonRef.current) {
+          e.preventDefault();
+          submitButtonRef.current.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        if (inputType === 'continueBttn' && nameInputRef.current) {
+          e.preventDefault();
+          nameInputRef.current.focus();
+        } else if (inputType === 'submitBttn' && emailInputRef.current) {
+          e.preventDefault();
+          emailInputRef.current.focus();
+        }
+      }
+    }
+    
+    // Enter para navegar entre etapas
+    if (e.key === 'Enter') {
+      if (currentStep === 1 && inputType === 'name' && !e.shiftKey) {
+        e.preventDefault();
+        goToNextStep();
+      } else if (currentStep === 1 && inputType === 'continueBttn') {
+        e.preventDefault();
+        goToNextStep();
+      }
+    }
+    
+    // Tab + Shift para voltar (no email)
+    if (e.key === 'Tab' && e.shiftKey && currentStep === 2 && inputType === 'email') {
+      e.preventDefault();
+      goToPrevStep();
+    }
+  };
+
+  // Impedir scrolling quando o usuário clicar nos botões
+  const preventScrollOnClick = (e) => {
+    // Impede que o navegador faça scroll após o clique
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Em dispositivos móveis, remove o foco para evitar que o teclado virtual apareça
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
     }
   };
 
   // Função final de submissão
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Impede comportamentos de scroll indesejados
+    preventScrollOnClick(e);
     
     // Evitar submissão durante transição de animação
     if (formTransitioning) return;
@@ -133,7 +214,16 @@ const Home = ({ onStartJourney }) => {
     }
   };
   return (
-    <div className="home-container flex flex-col items-center justify-center p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-300 bg-white dark:bg-gray-800 shadow-gray-300 dark:shadow-gray-900">
+    <div 
+      className="home-container flex flex-col items-center justify-center p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-300 bg-white dark:bg-gray-800 shadow-gray-300 dark:shadow-gray-900"
+      // Prevenir eventos de scrolling na div principal
+      onWheel={(e) => {
+        // Impede o scroll da página quando estiver interagindo com o formulário
+        if (formRef.current && formRef.current.contains(e.target)) {
+          e.preventDefault();
+        }
+      }}
+    >
       {/* Avatar e Cabeçalho */}
       <img
         src={meuAvatar}
@@ -160,7 +250,18 @@ const Home = ({ onStartJourney }) => {
       </div>
 
       {/* Formulário com Etapas */}
-      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4" aria-live="polite">
+      <form 
+        ref={formRef}
+        onSubmit={handleSubmit} 
+        className="w-full flex flex-col gap-4" 
+        aria-live="polite"
+        // Impedir comportamento padrão de form submit
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+            e.preventDefault();
+          }
+        }}
+      >
         {/* Container para animação de etapas */}
         <div className="relative w-full overflow-hidden">
           {/* Etapa 1: Nome */}
@@ -179,6 +280,7 @@ const Home = ({ onStartJourney }) => {
               <input
                 type="text"
                 id="name"
+                ref={nameInputRef}
                 value={userName}
                 onChange={(e) => {
                   // FILTRAGEM EM TEMPO REAL: remove números e caracteres especiais
@@ -189,7 +291,7 @@ const Home = ({ onStartJourney }) => {
                     setNameError(''); // Limpa erro ao digitar no nome
                   }
                 }}
-                onKeyDown={handleKeyDown}
+                onKeyDown={(e) => handleKeyDown(e, 'name')}
                 onBlur={() => {
                   if (userName.trim() === '') {
                     setNameError('O nome é obrigatório.');
@@ -213,7 +315,12 @@ const Home = ({ onStartJourney }) => {
               {/* Botão para próxima etapa */}
               <button
                 type="button"
-                onClick={goToNextStep}
+                ref={continueButtonRef}
+                onClick={(e) => {
+                  preventScrollOnClick(e);
+                  goToNextStep();
+                }}
+                onKeyDown={(e) => handleKeyDown(e, 'continueBttn')}
                 disabled={isSubmitting || formTransitioning}
                 className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 flex items-center justify-center ${
                   isSubmitting || formTransitioning
@@ -246,7 +353,10 @@ const Home = ({ onStartJourney }) => {
                 <label htmlFor="email" className="text-gray-700 dark:text-gray-300 font-semibold">Seu Email:</label>
                 <button 
                   type="button" 
-                  onClick={goToPrevStep}
+                  onClick={(e) => {
+                    preventScrollOnClick(e);
+                    goToPrevStep();
+                  }}
                   className="text-blue-600 dark:text-blue-400 hover:underline flex items-center text-sm"
                   aria-label="Voltar para o campo de nome"
                 >
@@ -259,6 +369,7 @@ const Home = ({ onStartJourney }) => {
               <input
                 type="email"
                 id="email"
+                ref={emailInputRef}
                 value={userEmail}
                 onChange={(e) => {
                   setUserEmail(e.target.value);
@@ -266,6 +377,7 @@ const Home = ({ onStartJourney }) => {
                     setEmailError(''); // Limpa erro ao digitar no email
                   }
                 }}
+                onKeyDown={(e) => handleKeyDown(e, 'email')}
                 onBlur={() => {
                   if (userEmail.trim() === '') {
                     setEmailError('O e-mail é obrigatório.');
@@ -289,7 +401,9 @@ const Home = ({ onStartJourney }) => {
               {/* Botão de submissão final */}
               <button
                 type="submit"
+                ref={submitButtonRef}
                 disabled={isSubmitting || formTransitioning}
+                onKeyDown={(e) => handleKeyDown(e, 'submitBttn')}
                 className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 ${
                   isSubmitting || formTransitioning
                     ? 'bg-blue-400 cursor-not-allowed' 
