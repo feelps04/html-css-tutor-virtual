@@ -28,6 +28,17 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Adicionar estilo para o elemento #root para garantir que todo o conteúdo seja exibido corretamente */
+#root {
+  width: 100%;
+  height: 100vh;
+  overflow: auto;
 }
 
 h1 {
