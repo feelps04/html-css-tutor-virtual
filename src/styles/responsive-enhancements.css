@@ -7,9 +7,12 @@
   height: 100vh; /* Fallback */
   height: 100dvh; /* Dynamic viewport height - better for mobile */
   max-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Make chat container fill available space */
@@ -18,7 +21,10 @@
   flex-direction: column;
   height: 100%;
   max-height: 100dvh;
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Make message display area fill available space and scroll properly */
@@ -161,6 +167,9 @@ html {
 /* Prevent scrolling on body when chat is open */
 body.chat-open {
   overflow: hidden;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* Prevent iOS zoom on input focus */

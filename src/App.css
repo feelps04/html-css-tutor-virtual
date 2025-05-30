@@ -5,13 +5,14 @@
 
 /* Estilos Gerais Otimizados para Responsividade */
 html {
-  @apply text-base;
+  @apply text-base overflow-x-hidden;
   -webkit-tap-highlight-color: transparent; /* Remove highlight on tap for iOS */
   touch-action: manipulation; /* Improve responsiveness on touch devices */
   -webkit-text-size-adjust: 100%; /* Prevent automatic text size adjustment */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  max-width: 100vw; /* Prevent horizontal overflow */
 }
 
 /* Ajuste de tamanho base da fonte para dispositivos menores */
@@ -25,9 +26,10 @@ body {
   /* Usando classes Tailwind para margem, fonte, flexbox, alinhamento, altura mínima, e transições de cor */
   @apply m-0 font-sans flex justify-center items-center min-h-screen transition-colors duration-300;
   /* Otimizado para garantir que o body não exceda a largura da tela e que o conteúdo não transborde horizontalmente */
-  @apply w-screen overflow-x-hidden overscroll-none;
+  @apply w-full overflow-x-hidden overscroll-none;
   /* Melhorar performance de scrolling em dispositivos móveis */
   -webkit-overflow-scrolling: touch;
+  max-width: 100%; /* Ensure body doesn't exceed viewport width */
 }
 
 /* Styles for loading spinner */
