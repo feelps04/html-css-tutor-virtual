@@ -2,14 +2,15 @@ import React from 'react';
 
 const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, userAvatar }) => {
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 overflow-hidden" role="main" aria-label="Trilha de Aprendizado">
+    <div className="w-full h-screen max-h-screen bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 overflow-hidden" role="main" aria-label="Trilha de Aprendizado">
+      <div className="h-full overflow-y-auto overflow-x-hidden pr-1">
       {/* User Profile Section - Always visible */}
-      <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 mb-6 sm:mb-8 p-3 sm:p-4 bg-blue-50 dark:bg-gray-700 rounded-lg shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-2 mb-4 sm:mb-6 p-2 sm:p-3 bg-blue-50 dark:bg-gray-700 rounded-lg shadow-sm">
         {userAvatar && (
           <img 
             src={userAvatar} 
             alt="Avatar do Usuário" 
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-blue-500 dark:border-blue-400 object-cover"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-blue-500 dark:border-blue-400 object-cover"
           />
         )}
         <div className="text-center sm:text-left">
@@ -23,8 +24,8 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
       </div>
       
       {/* Learning Path Title - Centered for all screen sizes */}
-      <div className="text-center mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-300 mb-2">
+      <div className="text-center mb-2 sm:mb-4">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700 dark:text-blue-300 mb-1">
           Sua Trilha de Aprendizado
         </h2>
         <p className="text-gray-600 dark:text-gray-400 text-sm">
@@ -78,11 +79,11 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
       </div>
       
       {/* Desktop View (Timeline) - Only shown on medium screens and up */}
-      <div className="hidden sm:block relative pt-2">
+      <div className="hidden sm:block relative pt-1">
         {/* Vertical line for timeline */}
         <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-200 dark:bg-blue-900 rounded"></div>
         
-        <div className="space-y-8 relative">
+        <div className="space-y-6 relative">
           {Object.entries(learningTopics).map(([key, topicInfo], index) => (
             <div key={key} className="relative" role="listitem">
               {/* Circle marker on timeline */}
@@ -100,7 +101,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
               {/* Content card - alternating left and right */}
               <div 
                 className={`
-                  w-5/12 p-3 rounded-lg shadow-md transition-all duration-300 cursor-pointer
+                  w-5/12 p-2 rounded-lg shadow-md transition-all duration-300 cursor-pointer
                   ${index % 2 === 0 ? 'ml-auto mr-8' : 'mr-auto ml-8'} 
                   ${currentTopic === key 
                     ? 'bg-blue-50 dark:bg-gray-700 border-blue-500 border-2 transform scale-[1.02]' 
@@ -112,8 +113,8 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
                 aria-pressed={currentTopic === key ? 'true' : 'false'}
                 aria-label={`Tópico: ${topicInfo.name}`}
               >
-                <h3 className="font-bold text-xl text-gray-800 dark:text-gray-200">{topicInfo.name}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mt-2">{topicInfo.description}</p>
+                <h3 className="font-bold text-lg text-gray-800 dark:text-gray-200">{topicInfo.name}</h3>
+                <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">{topicInfo.description}</p>
                 {currentTopic === key && (
                   <span className="inline-block mt-3 text-sm font-medium bg-blue-500 text-white px-2 py-1 rounded">
                     Tópico Atual
@@ -130,6 +131,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
             </div>
           ))}
         </div>
+      </div>
       </div>
     </div>
   );
