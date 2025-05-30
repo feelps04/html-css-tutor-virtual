@@ -47,6 +47,21 @@
   "responsive_design": {
     "name": "Design Responsivo",
     "description": "Adaptando seu site para diferentes tamanhos de tela com media queries e abordagens responsivas.",
+    "next_topics": ["javascript_intro", "html_css_project"]
+  },
+  "javascript_intro": {
+    "name": "Introdução ao JavaScript",
+    "description": "Comece a adicionar interatividade às suas páginas web com JavaScript.",
+    "next_topics": ["javascript_dom", "html_css_project"]
+  },
+  "javascript_dom": {
+    "name": "JavaScript e o DOM",
+    "description": "Manipulando elementos HTML e respondendo a eventos do usuário com JavaScript.",
+    "next_topics": ["javascript_events", "html_css_project"]
+  },
+  "javascript_events": {
+    "name": "Eventos em JavaScript",
+    "description": "Detectando e respondendo a interações do usuário como cliques, teclas e movimentos do mouse.",
     "next_topics": ["html_css_project"]
   },
   "html_css_project": {

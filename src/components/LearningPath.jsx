@@ -2,7 +2,7 @@ import React from 'react';
 
 const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, userAvatar }) => {
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 overflow-x-hidden" role="main" aria-label="Trilha de Aprendizado">
+    <div className="w-full min-h-screen bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 overflow-hidden" role="main" aria-label="Trilha de Aprendizado">
       {/* User Profile Section - Always visible */}
       <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 mb-6 sm:mb-8 p-3 sm:p-4 bg-blue-50 dark:bg-gray-700 rounded-lg shadow-sm">
         {userAvatar && (
@@ -23,7 +23,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
       </div>
       
       {/* Learning Path Title - Centered for all screen sizes */}
-      <div className="text-center mb-6 sm:mb-10">
+      <div className="text-center mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-300 mb-2">
           Sua Trilha de Aprendizado
         </h2>
@@ -34,7 +34,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
       
       {/* Mobile View (Stack) - Only shown on small screens */}
       <div className="sm:hidden">
-        <div className="space-y-4 relative">
+        <div className="space-y-3 relative">
           {/* Vertical Line for mobile - shorter connection line */}
           <div className="absolute left-4 top-2 bottom-2 w-1 bg-blue-200 dark:bg-blue-900 rounded z-0"></div>
           
@@ -43,7 +43,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
               key={key}
               onClick={() => onTopicSelect(key)}
               className={`
-                relative ml-8 p-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer z-10
+                relative ml-8 p-3 rounded-lg shadow-md transition-all duration-300 cursor-pointer z-10
                 ${currentTopic === key 
                   ? 'bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500 transform scale-[1.02]' 
                   : 'bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'
@@ -78,11 +78,11 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
       </div>
       
       {/* Desktop View (Timeline) - Only shown on medium screens and up */}
-      <div className="hidden sm:block relative pt-4">
+      <div className="hidden sm:block relative pt-2">
         {/* Vertical line for timeline */}
         <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-200 dark:bg-blue-900 rounded"></div>
         
-        <div className="space-y-16 relative">
+        <div className="space-y-8 relative">
           {Object.entries(learningTopics).map(([key, topicInfo], index) => (
             <div key={key} className="relative" role="listitem">
               {/* Circle marker on timeline */}
@@ -100,7 +100,7 @@ const LearningPath = ({ learningTopics, onTopicSelect, currentTopic, userName, u
               {/* Content card - alternating left and right */}
               <div 
                 className={`
-                  w-5/12 p-5 rounded-lg shadow-md transition-all duration-300 cursor-pointer
+                  w-5/12 p-3 rounded-lg shadow-md transition-all duration-300 cursor-pointer
                   ${index % 2 === 0 ? 'ml-auto mr-8' : 'mr-auto ml-8'} 
                   ${currentTopic === key 
                     ? 'bg-blue-50 dark:bg-gray-700 border-blue-500 border-2 transform scale-[1.02]' 
