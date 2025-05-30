@@ -16,12 +16,14 @@ const Home = ({ onStartJourney }) => {
   // Estados básicos
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userPassword, setUserPassword] = useState('');
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Estados para o fluxo de etapas
-  const [currentStep, setCurrentStep] = useState(1); // 1 = nome, 2 = email
+  const [currentStep, setCurrentStep] = useState(1); // 1 = nome, 2 = email, 3 = senha
   const [animationDirection, setAnimationDirection] = useState('forward'); // 'forward' ou 'backward'
   const [formTransitioning, setFormTransitioning] = useState(false);
   
@@ -29,7 +31,9 @@ const Home = ({ onStartJourney }) => {
   const formRef = useRef(null);
   const nameInputRef = useRef(null);
   const emailInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
   const continueButtonRef = useRef(null);
+  const nextButtonRef = useRef(null);
   const submitButtonRef = useRef(null);
 
   // Validação de nome para não permitir números ou caracteres especiais
@@ -41,6 +45,11 @@ const Home = ({ onStartJourney }) => {
   // Validação de email com regex mais completa
   const isValidEmail = (email) => {
     return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+  };
+  
+  // Validação de senha: mínimo 6 caracteres, pelo menos 1 letra e 1 número
+  const isValidPassword = (password) => {
+    return password.length >= 6 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
   };
   // Função para prevenir o comportamento padrão de scroll
   const preventDefaultScroll = (e) => {
@@ -68,6 +77,8 @@ const Home = ({ onStartJourney }) => {
         nameInputRef.current.focus();
       } else if (currentStep === 2 && emailInputRef.current) {
         emailInputRef.current.focus();
+      } else if (currentStep === 3 && passwordInputRef.current) {
+        passwordInputRef.current.focus();
       }
     }, 350); // Um pouco mais que a duração da animação (300ms)
     
@@ -98,6 +109,27 @@ const Home = ({ onStartJourney }) => {
         setCurrentStep(2);
         setFormTransitioning(false);
       }, 300);
+    } else if (currentStep === 2) {
+      // Validação do email
+      if (userEmail.trim() === '') {
+        setEmailError('O e-mail é obrigatório.');
+        return;
+      }
+      
+      if (!isValidEmail(userEmail)) {
+        setEmailError('Por favor, insira um endereço de e-mail válido.');
+        return;
+      }
+
+      // Animação
+      setAnimationDirection('forward');
+      setFormTransitioning(true);
+      
+      // Aguardar a animação de saída antes de mudar a etapa
+      setTimeout(() => {
+        setCurrentStep(3);
+        setFormTransitioning(false);
+      }, 300);
     }
   };
 
@@ -111,6 +143,16 @@ const Home = ({ onStartJourney }) => {
       // Aguardar a animação de saída antes de mudar a etapa
       setTimeout(() => {
         setCurrentStep(1);
+        setFormTransitioning(false);
+      }, 300);
+    } else if (currentStep === 3) {
+      // Animação
+      setAnimationDirection('backward');
+      setFormTransitioning(true);
+      
+      // Aguardar a animação de saída antes de mudar a etapa
+      setTimeout(() => {
+        setCurrentStep(2);
         setFormTransitioning(false);
       }, 300);
     }
@@ -127,7 +169,10 @@ const Home = ({ onStartJourney }) => {
         if (inputType === 'name' && continueButtonRef.current) {
           e.preventDefault();
           continueButtonRef.current.focus();
-        } else if (inputType === 'email' && submitButtonRef.current) {
+        } else if (inputType === 'email' && nextButtonRef.current) {
+          e.preventDefault();
+          nextButtonRef.current.focus();
+        } else if (inputType === 'password' && submitButtonRef.current) {
           e.preventDefault();
           submitButtonRef.current.focus();
         }
@@ -135,19 +180,22 @@ const Home = ({ onStartJourney }) => {
         if (inputType === 'continueBttn' && nameInputRef.current) {
           e.preventDefault();
           nameInputRef.current.focus();
-        } else if (inputType === 'submitBttn' && emailInputRef.current) {
+        } else if (inputType === 'nextBttn' && emailInputRef.current) {
           e.preventDefault();
           emailInputRef.current.focus();
+        } else if (inputType === 'submitBttn' && passwordInputRef.current) {
+          e.preventDefault();
+          passwordInputRef.current.focus();
         }
       }
     }
     
     // Enter para navegar entre etapas
     if (e.key === 'Enter') {
-      if (currentStep === 1 && inputType === 'name' && !e.shiftKey) {
-        e.preventDefault();
-        goToNextStep();
-      } else if (currentStep === 1 && inputType === 'continueBttn') {
+      if ((currentStep === 1 && inputType === 'name' && !e.shiftKey) || 
+          (currentStep === 1 && inputType === 'continueBttn') ||
+          (currentStep === 2 && inputType === 'email' && !e.shiftKey) ||
+          (currentStep === 2 && inputType === 'nextBttn')) {
         e.preventDefault();
         goToNextStep();
       }
@@ -183,16 +231,16 @@ const Home = ({ onStartJourney }) => {
     if (formTransitioning) return;
     
     // Limpar erros anteriores
-    setEmailError('');
+    setPasswordError('');
 
-    // Validação do email
-    if (userEmail.trim() === '') {
-      setEmailError('O e-mail é obrigatório.');
+    // Validação da senha
+    if (userPassword.trim() === '') {
+      setPasswordError('A senha é obrigatória.');
       return;
     }
     
-    if (!isValidEmail(userEmail)) {
-      setEmailError('Por favor, insira um endereço de e-mail válido.');
+    if (!isValidPassword(userPassword)) {
+      setPasswordError('A senha deve ter pelo menos 6 caracteres, incluindo letras e números.');
       return;
     }
 
@@ -203,7 +251,8 @@ const Home = ({ onStartJourney }) => {
       // Se tudo estiver OK, prossegue com a jornada
       await onStartJourney({ 
         name: userName.trim(), 
-        email: userEmail.trim() 
+        email: userEmail.trim(),
+        password: userPassword.trim()
       });
     } catch (error) {
       console.error('Erro ao iniciar jornada:', error);
@@ -245,6 +294,10 @@ const Home = ({ onStartJourney }) => {
           <div className={`h-1 flex-grow mx-2 transition-colors duration-500 ${currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep >= 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
             2
+          </div>
+          <div className={`h-1 flex-grow mx-2 transition-colors duration-500 ${currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${currentStep >= 3 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
+            3
           </div>
         </div>
       </div>
@@ -342,9 +395,13 @@ const Home = ({ onStartJourney }) => {
             className={`transform transition-transform duration-300 ${
               currentStep === 2 
                 ? 'translate-x-0 opacity-100' 
-                : animationDirection === 'forward' 
+                : animationDirection === 'forward' && currentStep < 3
                   ? 'translate-x-full opacity-0 absolute inset-0' 
-                  : '-translate-x-full opacity-0 absolute inset-0'
+                  : animationDirection === 'backward' && currentStep < 2
+                    ? '-translate-x-full opacity-0 absolute inset-0'
+                    : animationDirection === 'forward' && currentStep > 2
+                      ? '-translate-x-full opacity-0 absolute inset-0'
+                      : 'translate-x-full opacity-0 absolute inset-0'
             }`}
             aria-hidden={currentStep !== 2}
           >
@@ -397,6 +454,95 @@ const Home = ({ onStartJourney }) => {
               {emailError && (
                 <p id="email-error" className="text-red-500 text-sm mt-2 font-medium" role="alert">{emailError}</p>
               )}
+
+              {/* Botão para próxima etapa */}
+              <button
+                type="button"
+                ref={nextButtonRef}
+                onClick={(e) => {
+                  preventScrollOnClick(e);
+                  goToNextStep();
+                }}
+                onKeyDown={(e) => handleKeyDown(e, 'nextBttn')}
+                disabled={isSubmitting || formTransitioning}
+                className={`mt-6 py-3 px-6 rounded-lg text-lg font-bold transition-all duration-300 flex items-center justify-center ${
+                  isSubmitting || formTransitioning
+                    ? 'bg-blue-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 hover:shadow-md active:translate-y-0.5'
+                } text-white`}
+                aria-label="Continuar para o campo de senha"
+              >
+                Continuar
+                <Suspense fallback={<div className="w-4 h-4 ml-2"></div>}>
+                  <FaArrowRight className="ml-2" />
+                </Suspense>
+              </button>
+            </div>
+          </div>
+
+          {/* Etapa 3: Senha */}
+          <div 
+            className={`transform transition-transform duration-300 ${
+              currentStep === 3 
+                ? 'translate-x-0 opacity-100' 
+                : animationDirection === 'forward' 
+                  ? 'translate-x-full opacity-0 absolute inset-0' 
+                  : '-translate-x-full opacity-0 absolute inset-0'
+            }`}
+            aria-hidden={currentStep !== 3}
+          >
+            <div className="form-group flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="password" className="text-gray-700 dark:text-gray-300 font-semibold">Sua Senha:</label>
+                <button 
+                  type="button" 
+                  onClick={(e) => {
+                    preventScrollOnClick(e);
+                    goToPrevStep();
+                  }}
+                  className="text-blue-600 dark:text-blue-400 hover:underline flex items-center text-sm"
+                  aria-label="Voltar para o campo de email"
+                >
+                  <Suspense fallback={<div className="w-3 h-3 mr-1"></div>}>
+                    <FaArrowLeft className="mr-1" />
+                  </Suspense>
+                  Voltar
+                </button>
+              </div>
+              <input
+                type="password"
+                id="password"
+                ref={passwordInputRef}
+                value={userPassword}
+                onChange={(e) => {
+                  setUserPassword(e.target.value);
+                  if (e.target.value.trim() !== '') {
+                    setPasswordError(''); // Limpa erro ao digitar a senha
+                  }
+                }}
+                onKeyDown={(e) => handleKeyDown(e, 'password')}
+                onBlur={() => {
+                  if (userPassword.trim() === '') {
+                    setPasswordError('A senha é obrigatória.');
+                  } else if (!isValidPassword(userPassword)) {
+                    setPasswordError('A senha deve ter pelo menos 6 caracteres, incluindo letras e números.');
+                  }
+                }}
+                className={`p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 transition-colors ${
+                  passwordError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="Digite sua senha"
+                aria-invalid={passwordError ? 'true' : 'false'}
+                aria-describedby={passwordError ? 'password-error' : undefined}
+                required
+                disabled={currentStep !== 3 || isSubmitting}
+              />
+              {passwordError && (
+                <p id="password-error" className="text-red-500 text-sm mt-2 font-medium" role="alert">{passwordError}</p>
+              )}
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                A senha deve ter pelo menos 6 caracteres, incluindo letras e números.
+              </p>
 
               {/* Botão de submissão final */}
               <button
